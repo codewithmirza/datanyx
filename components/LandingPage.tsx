@@ -12,30 +12,53 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 
 // Auth Form Component
-const AuthForm = ({ type }: { type: 'login' | 'signup' }) => {
+const AuthForm = ({ type, onSubmit }: { type: 'login' | 'signup', onSubmit: (email: string, password: string) => void }) => {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSubmit(email, password)
+  }
+
   return (
     <Card className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[400px] z-50 bg-black/80 backdrop-blur-lg border-cyan-500/30">
       <CardHeader>
         <CardTitle className="text-xl text-cyan-500">
           {type === 'login' ? 'Welcome Back' : 'Create Account'}
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-gray-300">
           {type === 'login' 
             ? 'Access your AI-powered financial insights' 
             : 'Start your journey to better loan management'}
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="you@university.edu" />
+            <Label htmlFor="email" className="text-gray-200">Email</Label>
+            <Input 
+              id="email" 
+              type="email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@university.edu"
+              className="bg-gray-900 text-white placeholder:text-gray-500"
+              required
+            />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" />
+            <Label htmlFor="password" className="text-gray-200">Password</Label>
+            <Input 
+              id="password" 
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="bg-gray-900 text-white"
+              required
+            />
           </div>
-          <Button className="w-full bg-cyan-500 hover:bg-cyan-600">
+          <Button type="submit" className="w-full bg-cyan-500 hover:bg-cyan-600">
             {type === 'login' ? 'Sign In' : 'Create Account'}
           </Button>
         </form>
@@ -45,31 +68,14 @@ const AuthForm = ({ type }: { type: 'login' | 'signup' }) => {
 }
 
 export default function LandingPage() {
-  const { user, signIn, signUp } = useAuth()
   const router = useRouter()
-
-  useEffect(() => {
-    if (user) {
-      router.push('/dashboard')
-    }
-  }, [user, router])
-
-  const handleAuth = async (type: 'login' | 'signup', email: string, password: string) => {
-    try {
-      if (type === 'login') {
-        await signIn(email, password)
-      } else {
-        await signUp(email, password)
-      }
-      router.push('/dashboard')
-    } catch (error) {
-      console.error('Authentication error:', error)
-      // Handle error (show message to user)
-    }
-  }
-
   const [showAuth, setShowAuth] = useState(false)
   const [authType, setAuthType] = useState<'login' | 'signup'>('login')
+
+  const handleAuth = async (email: string, password: string) => {
+    // Simplified auth - just redirect to dashboard
+    router.push('/dashboard')
+  }
 
   return (
     <div className="w-full h-screen bg-black">
@@ -99,7 +105,10 @@ export default function LandingPage() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40">
           <div className="absolute inset-0" onClick={() => setShowAuth(false)} />
           <div className="relative z-50">
-            <AuthForm type={authType} />
+            <AuthForm 
+              type={authType} 
+              onSubmit={handleAuth}
+            />
             <div className="fixed top-4 right-4 z-50 flex gap-2">
               <Button 
                 variant="ghost" 
