@@ -15,7 +15,7 @@ export default function DashboardScene() {
         <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
         <QuantumCore />
         <DataViz />
-        <Environment preset="night" />
+        <Environment preset="city" />
         <OrbitControls enableZoom={false} enablePan={false} />
         <EffectComposer>
           <Bloom luminanceThreshold={0} luminanceSmoothing={0.9} height={300} />

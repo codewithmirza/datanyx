@@ -11,7 +11,8 @@ index_name = "financial-data"
 
 [[kv_namespaces]]
 binding = "FINANCIAL_DATA"
-id = "4a24d2551ba04d988652fbc9bd855339"
+preview_id = "124ebe2525a745eea82914f84a4414f3"
+id = "124ebe2525a745eea82914f84a4414f3"
 
 [build]
 command = "npm run build:worker" 

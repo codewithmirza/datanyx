@@ -27,7 +27,8 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    "types": ["@cloudflare/workers-types"]
   },
   "include": [
     "next-env.d.ts",

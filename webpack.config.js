@@ -1,13 +1,15 @@
+const path = require('path');
+
 module.exports = {
   target: 'webworker',
   entry: './workers/ai-service.ts',
+  output: {
+    filename: 'worker.js',
+    path: path.join(__dirname, 'dist'),
+  },
   mode: 'production',
   resolve: {
     extensions: ['.ts', '.js'],
-    fallback: {
-      "base64-js": require.resolve("base64-js"),
-      "mustache": require.resolve("mustache")
-    }
   },
   module: {
     rules: [
