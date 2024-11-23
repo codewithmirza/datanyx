@@ -1,151 +1,170 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import Scene3D from './3d/Scene3D'
-import { GraduationCap } from 'lucide-react'
+import { GraduationCap, Brain, Scissors, BarChart3, History } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
 
-// Auth Form Component
-const AuthForm = ({ type, onSubmit }: { type: 'login' | 'signup', onSubmit: (email: string, password: string) => void }) => {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit(email, password)
-  }
-
-  return (
-    <Card className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[400px] z-50 bg-black/80 backdrop-blur-lg border-cyan-500/30">
+// Feature Card Component
+const FeatureCard = ({ icon: Icon, title, description }: { 
+  icon: any, 
+  title: string, 
+  description: string 
+}) => (
+  <motion.div
+    whileHover={{ scale: 1.05 }}
+    className="w-full max-w-sm"
+  >
+    <Card className="bg-black/80 backdrop-blur-lg border-cyan-500/30 h-full">
       <CardHeader>
-        <CardTitle className="text-xl text-cyan-500">
-          {type === 'login' ? 'Welcome Back' : 'Create Account'}
-        </CardTitle>
+        <Icon className="w-8 h-8 text-cyan-500 mb-2" />
+        <CardTitle className="text-xl text-cyan-500">{title}</CardTitle>
         <CardDescription className="text-gray-300">
-          {type === 'login' 
-            ? 'Access your AI-powered financial insights' 
-            : 'Start your journey to better loan management'}
+          {description}
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-gray-200">Email</Label>
-            <Input 
-              id="email" 
-              type="email" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@university.edu"
-              className="bg-gray-900 text-white placeholder:text-gray-500"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-gray-200">Password</Label>
-            <Input 
-              id="password" 
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="bg-gray-900 text-white"
-              required
-            />
-          </div>
-          <Button type="submit" className="w-full bg-cyan-500 hover:bg-cyan-600">
-            {type === 'login' ? 'Sign In' : 'Create Account'}
-          </Button>
-        </form>
-      </CardContent>
     </Card>
-  )
-}
+  </motion.div>
+)
 
 export default function LandingPage() {
   const router = useRouter()
   const [showAuth, setShowAuth] = useState(false)
-  const [authType, setAuthType] = useState<'login' | 'signup'>('login')
 
-  const handleAuth = async (email: string, password: string) => {
-    // Simplified auth - just redirect to dashboard
-    router.push('/dashboard')
-  }
+  // Features data
+  const features = [
+    {
+      icon: Brain,
+      title: "AI Finance Advisor",
+      description: "Personalized financial guidance powered by AI. Get smart suggestions for expense management, loan repayment, investments, and more."
+    },
+    {
+      icon: History,
+      title: "Smart Timelines",
+      description: "Visualize your entire cash flow - from loan deadlines to income streams. Stay on top of your financial commitments."
+    },
+    {
+      icon: Scissors,
+      title: "The Cost Cutter",
+      description: "AI-powered expense optimization. Identify areas to save and maintain a healthy financial lifestyle."
+    },
+    {
+      icon: BarChart3,
+      title: "Financial Insights",
+      description: "Comprehensive analytics and visualizations of your financial data. Make informed decisions with clear insights."
+    }
+  ]
 
   return (
-    <div className="w-full h-screen bg-black">
-      <Scene3D />
+    <div className="w-full min-h-screen bg-black overflow-x-hidden">
+      {/* 3D Background */}
+      <div className="fixed inset-0">
+        <Scene3D />
+      </div>
 
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center p-4">
-        <div className="flex items-center space-x-2">
-          <GraduationCap className="w-8 h-8 text-cyan-500" />
-          <span className="text-xl font-bold text-cyan-500">FinMate.AI</span>
-        </div>
-        <div className="flex items-center space-x-4">
-          <Button variant="ghost" className="text-cyan-500">Features</Button>
-          <Button variant="ghost" className="text-cyan-500">How It Works</Button>
-          <Button variant="ghost" className="text-cyan-500">About Us</Button>
-          <Button 
-            className="bg-cyan-500 hover:bg-cyan-600"
-            onClick={() => setShowAuth(true)}
+      {/* Content */}
+      <div className="relative z-10">
+        {/* Navigation */}
+        <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="flex items-center space-x-2">
+            <GraduationCap className="w-8 h-8 text-cyan-500" />
+            <span className="text-xl font-bold text-cyan-500">FinMate.AI</span>
+          </div>
+          <div className="flex items-center space-x-4">
+            <Button variant="ghost" className="text-cyan-500">Features</Button>
+            <Button variant="ghost" className="text-cyan-500">How It Works</Button>
+            <Button variant="ghost" className="text-cyan-500">About Us</Button>
+            <Button 
+              className="bg-cyan-500 hover:bg-cyan-600"
+              onClick={() => router.push('/login')}
+            >
+              Get Started
+            </Button>
+          </div>
+        </nav>
+
+        {/* Hero Section */}
+        <section className="min-h-screen flex items-center justify-center px-4 pt-20">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center"
           >
-            Get Started
-          </Button>
-        </div>
-      </nav>
+            <h1 className="text-5xl font-bold text-cyan-500 mb-4">
+              Your AI-Powered Financial Companion
+            </h1>
+            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+              Navigate student finances with confidence using advanced AI insights, 
+              personalized recommendations, and smart expense management.
+            </p>
+            <Button 
+              size="lg"
+              className="bg-cyan-500 hover:bg-cyan-600"
+              onClick={() => router.push('/login')}
+            >
+              Start Your Journey
+            </Button>
+          </motion.div>
+        </section>
 
-      {/* Auth Modal */}
-      {showAuth && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40">
-          <div className="absolute inset-0" onClick={() => setShowAuth(false)} />
-          <div className="relative z-50">
-            <AuthForm 
-              type={authType} 
-              onSubmit={handleAuth}
-            />
-            <div className="fixed top-4 right-4 z-50 flex gap-2">
-              <Button 
-                variant="ghost" 
-                className={`text-cyan-500 ${authType === 'login' ? 'bg-cyan-500/20' : ''}`}
-                onClick={() => setAuthType('login')}
+        {/* Features Section */}
+        <section className="min-h-screen py-20 px-4">
+          <h2 className="text-3xl font-bold text-cyan-500 text-center mb-12">
+            Powerful Features for Your Financial Success
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            {features.map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.2 }}
               >
-                Login
-              </Button>
-              <Button 
-                variant="ghost" 
-                className={`text-cyan-500 ${authType === 'signup' ? 'bg-cyan-500/20' : ''}`}
-                onClick={() => setAuthType('signup')}
-              >
-                Sign Up
-              </Button>
+                <FeatureCard {...feature} />
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* Tech Stack Section */}
+        <section className="py-20 px-4 bg-black/50 backdrop-blur-lg">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-3xl font-bold text-cyan-500 text-center mb-12">
+              Powered by Advanced Technology
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <Card className="bg-black/80 border-cyan-500/30">
+                <CardHeader>
+                  <CardTitle className="text-cyan-500">AI & Machine Learning</CardTitle>
+                  <CardDescription className="text-gray-300">
+                    Our AI model utilizes RAG (Retrieval-Augmented Generation) and 
+                    fine-tuned vector databases to provide personalized financial advice 
+                    and insights based on your unique situation.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+              <Card className="bg-black/80 border-cyan-500/30">
+                <CardHeader>
+                  <CardTitle className="text-cyan-500">Data Analytics</CardTitle>
+                  <CardDescription className="text-gray-300">
+                    Advanced data visualization and analytics help you understand your 
+                    financial patterns and make informed decisions about your future.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
             </div>
           </div>
-        </div>
-      )}
+        </section>
 
-      {/* Scroll Instructions */}
-      <motion.div 
-        className="fixed bottom-24 left-1/2 transform -translate-x-1/2 text-cyan-500"
-        animate={{ y: [0, 10, 0] }}
-        transition={{ duration: 2, repeat: Infinity }}
-      >
-        Scroll to explore
-      </motion.div>
-
-      {/* Problem Statement Overlay */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-black/50 backdrop-blur-lg">
-        <h2 className="text-2xl font-bold text-cyan-500 mb-2">Improving Student Finance Management</h2>
-        <p className="text-white">
-          FinMate.AI addresses the global challenge of student loan management, affecting over 300 million students worldwide. 
-          Our AI-driven platform provides personalized insights, repayment strategies, and financial planning tools to help students 
-          navigate their educational finances effectively.
-        </p>
+        {/* Footer */}
+        <footer className="py-8 px-4 bg-black/50 backdrop-blur-lg">
+          <div className="max-w-6xl mx-auto text-center text-gray-400">
+            <p>© 2024 FinMate.AI. All rights reserved.</p>
+          </div>
+        </footer>
       </div>
     </div>
   )
