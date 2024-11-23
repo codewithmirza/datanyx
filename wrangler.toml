@@ -1,0 +1,17 @@
+name = "smartfinance-ai"
+main = "workers/ai-service.ts"
+compatibility_date = "2024-03-19"
+
+[ai]
+binding = "AI"
+
+[[vectorize]]
+binding = "VECTORIZE"
+index_name = "financial-data"
+
+[[kv_namespaces]]
+binding = "FINANCIAL_DATA"
+id = "4a24d2551ba04d988652fbc9bd855339"
+
+[build]
+command = "npm run build:worker" 

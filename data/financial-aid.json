@@ -1,0 +1,21 @@
+{
+  "scholarships": [
+    {
+      "id": "1",
+      "name": "Global Merit Scholarship",
+      "amount": 20000,
+      "country": "USA",
+      "requirements": ["GPA > 3.5", "International Student"],
+      "deadline": "2024-05-01"
+    }
+  ],
+  "grants": [
+    {
+      "id": "g1",
+      "name": "Need-Based Grant",
+      "amount": 15000,
+      "eligibility": "Demonstrated Financial Need",
+      "country": "USA"
+    }
+  ]
+} 

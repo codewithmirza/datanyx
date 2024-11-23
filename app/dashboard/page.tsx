@@ -10,6 +10,7 @@ import { HolographicButton, HolographicCard } from '@/components/dashboard/Holog
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import type { LucideIcon } from 'lucide-react'
+import { getAIRecommendations } from '@/lib/ai-service'
 
 ChartJS.register(
   CategoryScale, 
@@ -82,10 +83,41 @@ export default function Dashboard() {
     "Start building an emergency fund"
   ])
 
+  const [aiData, setAiData] = useState(null)
+
   useEffect(() => {
     // Simulate data loading
     setTimeout(() => setLoading(false), 2000)
   }, [])
+
+  useEffect(() => {
+    const fetchAIData = async () => {
+      try {
+        const data = await getAIRecommendations({
+          loanAmount: userData.loanAmount,
+          monthlyIncome: userData.monthlyIncome,
+          monthlyExpenses: userData.monthlyExpenses,
+          country: userData.country,
+          university: userData.university
+        })
+        setAiData(data)
+        // Update metrics with AI data
+        setMetrics(prev => ({
+          ...prev,
+          riskScore: data.data.riskScore,
+          // Add other metrics
+        }))
+        // Update recommendations
+        setRecommendations(data.data.recommendations)
+      } catch (error) {
+        console.error('Error fetching AI data:', error)
+      }
+    }
+
+    if (!loading) {
+      fetchAIData()
+    }
+  }, [userData, loading])
 
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden">
