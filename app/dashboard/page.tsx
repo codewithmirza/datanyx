@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Loader2, AlertTriangle, CheckCircle2, TrendingUp, Briefcase, GraduationCap, DollarSign, CreditCard, PiggyBank, TrendingDown, History } from 'lucide-react'
+import { Loader2, AlertTriangle, CheckCircle2, TrendingUp, Briefcase, GraduationCap, DollarSign, CreditCard, PiggyBank, TrendingDown, History, Brain, Scissors, User } from 'lucide-react'
 import { Line, Bar, Radar, Doughnut } from 'react-chartjs-2'
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, RadialLinearScale, ArcElement, Title, Tooltip, Legend, Filler } from 'chart.js'
 import DashboardScene from './DashboardScene'
@@ -11,6 +11,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import type { LucideIcon } from 'lucide-react'
 import { getAIRecommendations } from '@/lib/ai-service'
+import { AIAdvisor } from '@/components/dashboard/features/AIAdvisor/AIAdvisor'
+import { CostCutter } from '@/components/dashboard/features/CostCutter/CostCutter'
+import { FinancialTimeline } from '@/components/dashboard/features/Timeline/FinancialTimeline'
 
 ChartJS.register(
   CategoryScale, 
@@ -119,47 +122,53 @@ export default function Dashboard() {
     }
   }, [userData, loading])
 
+  // Add new feature tabs
+  const tabs = [
+    { id: 'dashboard', label: 'Dashboard', icon: Briefcase },
+    { id: 'ai-advisor', label: 'AI Advisor', icon: Brain },
+    { id: 'cost-cutter', label: 'Cost Cutter', icon: Scissors },
+    { id: 'timelines', label: 'Timelines', icon: History },
+    { id: 'profile', label: 'Profile', icon: User }
+  ]
+
   return (
-    <div className="min-h-screen bg-black text-white overflow-hidden">
+    <div className="min-h-screen bg-black text-white">
+      {/* Background Scene */}
       <DashboardScene />
 
+      {/* Content */}
       <div className="relative z-10 container mx-auto px-4 py-8">
-        <header className="mb-8">
-          <h1 className="text-4xl font-bold text-center text-cyan-500 mb-4">
-            SmartFinance.AI Dashboard
-          </h1>
-          <nav className="flex justify-center space-x-4">
-            <HolographicButton 
-              onClick={() => setActiveTab('dashboard')} 
-              icon={Briefcase}
-            >
-              Dashboard
-            </HolographicButton>
-            <HolographicButton 
-              onClick={() => setActiveTab('profile')} 
-              icon={GraduationCap}
-            >
-              Profile
-            </HolographicButton>
-            <HolographicButton 
-              onClick={() => setActiveTab('global')} 
-              icon={DollarSign}
-            >
-              Global Insights
-            </HolographicButton>
-          </nav>
-        </header>
+        {/* Navigation Tabs */}
+        <div className="flex flex-wrap gap-4 mb-8">
+          {tabs.map((tab) => {
+            const Icon = tab.icon
+            return (
+              <HolographicButton
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                icon={Icon}
+                className={`${
+                  activeTab === tab.id
+                    ? 'bg-cyan-500 text-black'
+                    : 'bg-transparent text-cyan-500'
+                }`}
+              >
+                {tab.label}
+              </HolographicButton>
+            )
+          })}
+        </div>
 
+        {/* Tab Content */}
         <AnimatePresence mode="wait">
           {loading ? (
             <motion.div
-              key="loading"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex items-center justify-center h-64"
+              className="flex items-center justify-center h-[60vh]"
             >
-              <Loader2 className="w-16 h-16 animate-spin text-cyan-500" />
+              <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" />
             </motion.div>
           ) : (
             <motion.div
@@ -167,8 +176,9 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.3 }}
             >
+              {/* Existing dashboard content */}
               {activeTab === 'dashboard' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                   <StatCard 
@@ -248,6 +258,28 @@ export default function Dashboard() {
                 </div>
               )}
 
+              {/* AI Advisor Tab */}
+              {activeTab === 'ai-advisor' && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <AIAdvisor userData={userData} />
+                </div>
+              )}
+
+              {/* Cost Cutter Tab */}
+              {activeTab === 'cost-cutter' && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <CostCutter userData={userData} />
+                </div>
+              )}
+
+              {/* Timelines Tab */}
+              {activeTab === 'timelines' && (
+                <div className="grid grid-cols-1 gap-6">
+                  <FinancialTimeline userData={userData} />
+                </div>
+              )}
+
+              {/* Existing profile content */}
               {activeTab === 'profile' && (
                 <HolographicCard>
                   <h2 className="text-2xl font-bold mb-6">User Profile</h2>
@@ -313,164 +345,6 @@ export default function Dashboard() {
                     </HolographicButton>
                   </div>
                 </HolographicCard>
-              )}
-
-              {activeTab === 'global' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <HolographicCard>
-                    <h2 className="text-2xl font-bold mb-4">Global Loan Statistics</h2>
-                    <Bar
-                      data={{
-                        labels: ['USA', 'UK', 'Canada', 'Australia', 'Germany'],
-                        datasets: [{
-                          label: 'Average Student Loan (USD)',
-                          data: [35000, 28000, 30000, 25000, 15000],
-                          backgroundColor: [
-                            'rgba(6, 182, 212, 0.6)',
-                            'rgba(6, 182, 212, 0.5)',
-                            'rgba(6, 182, 212, 0.4)',
-                            'rgba(6, 182, 212, 0.3)',
-                            'rgba(6, 182, 212, 0.2)',
-                          ],
-                        }]
-                      }}
-                      options={{
-                        responsive: true,
-                        plugins: {
-                          legend: { display: false },
-                        },
-                        scales: {
-                          y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                            ticks: { color: 'rgba(255, 255, 255, 0.7)' }
-                          },
-                          x: {
-                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                            ticks: { color: 'rgba(255, 255, 255, 0.7)' }
-                          }
-                        }
-                      }}
-                    />
-                  </HolographicCard>
-
-                  <HolographicCard>
-                    <h2 className="text-2xl font-bold mb-4">Interest Rate Trends</h2>
-                    <Line
-                      data={{
-                        labels: ['2019', '2020', '2021', '2022', '2023', '2024'],
-                        datasets: [{
-                          label: 'Average Interest Rate (%)',
-                          data: [5.8, 5.3, 4.9, 5.1, 5.5, 5.7],
-                          borderColor: '#06b6d4',
-                          backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                          fill: true,
-                          tension: 0.4
-                        }]
-                      }}
-                      options={{
-                        responsive: true,
-                        plugins: {
-                          legend: { display: false },
-                        },
-                        scales: {
-                          y: {
-                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                            ticks: { color: 'rgba(255, 255, 255, 0.7)' }
-                          },
-                          x: {
-                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                            ticks: { color: 'rgba(255, 255, 255, 0.7)' }
-                          }
-                        }
-                      }}
-                    />
-                  </HolographicCard>
-
-                  <HolographicCard>
-                    <h2 className="text-2xl font-bold mb-4">Default Risk by Education Level</h2>
-                    <Doughnut
-                      data={{
-                        labels: ['Undergraduate', 'Graduate', 'PhD', 'Professional'],
-                        datasets: [{
-                          data: [35, 25, 15, 25],
-                          backgroundColor: [
-                            'rgba(6, 182, 212, 0.8)',
-                            'rgba(6, 182, 212, 0.6)',
-                            'rgba(6, 182, 212, 0.4)',
-                            'rgba(6, 182, 212, 0.2)',
-                          ],
-                        }]
-                      }}
-                      options={{
-                        responsive: true,
-                        plugins: {
-                          legend: {
-                            position: 'bottom',
-                            labels: { color: 'rgba(255, 255, 255, 0.7)' }
-                          }
-                        }
-                      }}
-                    />
-                  </HolographicCard>
-
-                  <HolographicCard>
-                    <h2 className="text-2xl font-bold mb-4">Financial Aid Distribution</h2>
-                    <Radar
-                      data={{
-                        labels: ['Grants', 'Scholarships', 'Work Study', 'Federal Loans', 'Private Loans'],
-                        datasets: [{
-                          label: 'Current Year',
-                          data: [80, 65, 45, 70, 55],
-                          backgroundColor: 'rgba(6, 182, 212, 0.2)',
-                          borderColor: '#06b6d4',
-                          pointBackgroundColor: '#06b6d4',
-                        }]
-                      }}
-                      options={{
-                        responsive: true,
-                        scales: {
-                          r: {
-                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
-                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                            pointLabels: { color: 'rgba(255, 255, 255, 0.7)' },
-                            ticks: { display: false }
-                          }
-                        },
-                        plugins: {
-                          legend: { display: false }
-                        }
-                      }}
-                    />
-                  </HolographicCard>
-
-                  <HolographicCard className="md:col-span-2">
-                    <h2 className="text-2xl font-bold mb-4">Global Market Analysis</h2>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between p-4 bg-black/30 rounded-lg">
-                        <div>
-                          <p className="text-gray-400">Total Global Student Debt</p>
-                          <p className="text-2xl font-bold text-white">$1.7T</p>
-                        </div>
-                        <TrendingUp className="w-8 h-8 text-cyan-500" />
-                      </div>
-                      <div className="flex items-center justify-between p-4 bg-black/30 rounded-lg">
-                        <div>
-                          <p className="text-gray-400">Average Repayment Period</p>
-                          <p className="text-2xl font-bold text-white">20 Years</p>
-                        </div>
-                        <History className="w-8 h-8 text-cyan-500" />
-                      </div>
-                      <div className="flex items-center justify-between p-4 bg-black/30 rounded-lg">
-                        <div>
-                          <p className="text-gray-400">Global Default Rate</p>
-                          <p className="text-2xl font-bold text-white">11.5%</p>
-                        </div>
-                        <AlertTriangle className="w-8 h-8 text-cyan-500" />
-                      </div>
-                    </div>
-                  </HolographicCard>
-                </div>
               )}
             </motion.div>
           )}

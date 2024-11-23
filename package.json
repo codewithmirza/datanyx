@@ -13,8 +13,11 @@
   },
   "dependencies": {
     "@cloudflare/ai": "^1.0.0",
+    "@radix-ui/react-label": "^2.0.0",
     "base64-js": "^1.5.1",
-    "mustache": "^4.2.0"
+    "clsx": "^2.0.0",
+    "mustache": "^4.2.0",
+    "tailwind-merge": "^2.0.0"
   },
   "devDependencies": {
     "ts-loader": "^9.5.1",

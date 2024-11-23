@@ -73,32 +73,81 @@ async function handleRecommendations(request: Request, env: Env, ai: Ai) {
   const data: FinancialData = await request.json()
   
   const prompt = `
-    As an AI financial advisor, analyze this student's situation:
+    As an AI financial advisor, provide concise, actionable recommendations for this student:
     - Loan Amount: $${data.loanAmount}
     - Monthly Income: $${data.monthlyIncome}
     - Monthly Expenses: $${data.monthlyExpenses}
     - Country: ${data.country}
     - University: ${data.university}
+
+    Format your response in 5 clear sections:
+    1. Loan Repayment Strategy: Specific steps to efficiently repay the loan
+    2. Budget Optimization: How to reduce expenses and maximize savings
+    3. Investment Opportunities: Safe investment options for students
+    4. Risk Management: Steps to minimize financial risks
+    5. Income Growth: Ways to increase income while studying
+
+    Keep each recommendation short, specific, and actionable.
   `
 
-  const completion = await ai.run('@cf/meta/llama-2-7b-chat-int8', {
-    messages: [{ role: 'user', content: prompt }]
-  }) as { response: string }
+  try {
+    const completion = await ai.run('@cf/meta/llama-2-7b-chat-int8', {
+      messages: [{ role: 'user', content: prompt }]
+    }) as { response: string }
 
-  const metrics = calculateFinancialMetrics(data)
+    const metrics = calculateFinancialMetrics(data)
+    const monthlyPayment = calculateMonthlyPayment(data.loanAmount, 5.5, 120)
 
-  return new Response(JSON.stringify({
-    success: true,
-    data: {
-      recommendations: parseAIResponse(completion.response),
-      metrics
-    }
-  }), {
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-    }
-  })
+    // Enhanced response structure
+    return new Response(JSON.stringify({
+      success: true,
+      data: {
+        recommendations: parseAIResponse(completion.response),
+        financialMetrics: {
+          monthly: {
+            income: data.monthlyIncome,
+            expenses: data.monthlyExpenses,
+            loanPayment: monthlyPayment,
+            availableForSavings: data.monthlyIncome - data.monthlyExpenses - monthlyPayment
+          },
+          loan: {
+            total: data.loanAmount,
+            monthlyPayment: monthlyPayment,
+            projectedPayoffDate: calculateDebtFreeDate(data),
+            totalInterestPaid: (monthlyPayment * 120) - data.loanAmount
+          },
+          risk: {
+            debtToIncomeRatio: metrics.debtToIncomeRatio,
+            riskLevel: metrics.riskLevel,
+            savingsRate: metrics.savingsRate,
+            monthlyBuffer: metrics.monthlySavings
+          },
+          projections: {
+            annualSavings: calculateProjectedSavings(data),
+            emergencyFundTarget: data.monthlyExpenses * 6,
+            timeToEmergencyFund: Math.ceil((data.monthlyExpenses * 6) / metrics.monthlySavings)
+          }
+        }
+      }
+    }), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      }
+    })
+  } catch (error) {
+    console.error('AI processing error:', error)
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Failed to generate recommendations'
+    }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      }
+    })
+  }
 }
 
 // Helper functions
@@ -115,11 +164,21 @@ function calculateFinancialMetrics(data: FinancialData) {
   }
 }
 
-function parseAIResponse(response: string): string[] {
+function parseAIResponse(response: string): any {
   try {
-    return response.split('\n').filter(line => line.trim().length > 0)
+    const sections = response.split(/\d+\./).filter(s => s.trim().length > 0)
+    return {
+      loanStrategy: sections[0]?.trim() || 'No loan strategy available',
+      budgetOptimization: sections[1]?.trim() || 'No budget optimization available',
+      investmentOpportunities: sections[2]?.trim() || 'No investment opportunities available',
+      riskManagement: sections[3]?.trim() || 'No risk management advice available',
+      incomeGrowth: sections[4]?.trim() || 'No income growth suggestions available'
+    }
   } catch {
-    return ['Unable to parse AI recommendations']
+    return {
+      error: 'Unable to parse AI recommendations',
+      rawResponse: response
+    }
   }
 }
 
@@ -185,4 +244,23 @@ async function handleCostAnalysis(request: Request, env: Env, ai: Ai) {
   }) as { response: string }
   
   return new Response(JSON.stringify({ analysis: completion.response }))
+}
+
+// Add helper functions
+function calculateMonthlyPayment(principal: number, annualRate: number, months: number): number {
+  const monthlyRate = annualRate / 12 / 100
+  return (principal * monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1)
+}
+
+function calculateProjectedSavings(data: FinancialData): number {
+  const monthlyPayment = calculateMonthlyPayment(data.loanAmount, 5.5, 120)
+  return (data.monthlyIncome - data.monthlyExpenses - monthlyPayment) * 12 // Annual projected savings
+}
+
+function calculateDebtFreeDate(data: FinancialData): string {
+  const monthlyPayment = calculateMonthlyPayment(data.loanAmount, 5.5, 120)
+  const months = Math.ceil(data.loanAmount / monthlyPayment)
+  const date = new Date()
+  date.setMonth(date.getMonth() + months)
+  return date.toISOString().split('T')[0]
 } 
