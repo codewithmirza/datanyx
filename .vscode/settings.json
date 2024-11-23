@@ -8,5 +8,12 @@
   },
   "editor.quickSuggestions": {
     "strings": true
-  }
+  },
+  "json.schemas": [
+    {
+      "fileMatch": ["package.json"],
+      "url": "./node_modules/@types/package-json/package.json"
+    }
+  ],
+  "json.validate.enable": false
 } 
