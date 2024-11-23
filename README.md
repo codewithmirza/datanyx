@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SmartFinance.AI - AI-Powered Student Finance Management
 
-## Getting Started
+SmartFinance.AI is an intelligent financial management platform designed specifically for students, leveraging AI to provide personalized financial guidance, loan management, and expense optimization.
 
-First, run the development server:
+## 🌟 Key Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### 1. AI Financial Advisor
+- Personalized financial health analysis
+- Smart spending recommendations
+- Foreign country cost-of-living adjustments
+- Loan repayment optimization
+- Government grants and aid suggestions
+- Investment opportunities (stocks, crypto)
+- Extra earning recommendations
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Financial Timelines
+- Comprehensive cash flow visualization
+- Loan payment deadline tracking
+- Income stream monitoring
+- Expense tracking
+- Investment return projections
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Cost Cutter
+- AI-powered expense optimization
+- Unnecessary cost identification
+- Smart budgeting recommendations
+- Location-based cost analysis
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4. Financial Insights
+- Interactive data visualizations
+- Cash flow analytics
+- Expense pattern analysis
+- Savings projections
+- Risk assessment metrics
 
-## Learn More
+## 🛠️ Technology Stack
 
-To learn more about Next.js, take a look at the following resources:
+### Frontend
+- Next.js 14 (App Router)
+- TypeScript
+- Tailwind CSS
+- Framer Motion
+- Three.js (3D visualizations)
+- Chart.js (Data visualization)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Backend
+- Cloudflare Workers
+- Vector Database (Cloudflare Vectorize)
+- KV Storage
+- Firebase (Auth & Firestore)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### AI/ML
+- RAG (Retrieval-Augmented Generation)
+- Cloudflare AI Models
+  - @cf/meta/llama-2-7b-chat-int8 (Financial advice)
+  - @cf/baai/bge-base-en-v1.5 (Embeddings)
 
-## Deploy on Vercel
+## 🏗️ Architecture
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Data Flow
+1. User data collection and processing
+2. Vector database population with financial aid data
+3. RAG-based personalized recommendations
+4. Real-time financial analytics
+5. Dynamic visualization generation
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### RAG Implementation
+1. **Knowledge Base**
+   - Financial aid programs
+   - Scholarship databases
+   - Government grants
+   - Investment opportunities
+   - Regional cost-of-living data
+
+2. **Retrieval System**
+   - Vector embeddings for efficient similarity search
+   - Context-aware document retrieval
+   - Dynamic data updates
+
+3. **Generation System**
+   - Personalized financial advice
+   - Cost optimization strategies
+   - Investment recommendations
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+
+- npm/yarn
+- Wrangler CLI
+- Firebase account
+- Cloudflare account
+
+### Installation
