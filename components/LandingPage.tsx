@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Scene3D from './3d/Scene3D'
 import { GraduationCap } from 'lucide-react'
 import { Button } from "@/components/ui/button"
@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { motion } from 'framer-motion'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 
 // Auth Form Component
 const AuthForm = ({ type }: { type: 'login' | 'signup' }) => {
@@ -43,6 +45,29 @@ const AuthForm = ({ type }: { type: 'login' | 'signup' }) => {
 }
 
 export default function LandingPage() {
+  const { user, signIn, signUp } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (user) {
+      router.push('/dashboard')
+    }
+  }, [user, router])
+
+  const handleAuth = async (type: 'login' | 'signup', email: string, password: string) => {
+    try {
+      if (type === 'login') {
+        await signIn(email, password)
+      } else {
+        await signUp(email, password)
+      }
+      router.push('/dashboard')
+    } catch (error) {
+      console.error('Authentication error:', error)
+      // Handle error (show message to user)
+    }
+  }
+
   const [showAuth, setShowAuth] = useState(false)
   const [authType, setAuthType] = useState<'login' | 'signup'>('login')
 
