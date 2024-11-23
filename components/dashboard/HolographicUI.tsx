@@ -39,28 +39,4 @@ export const HolographicCard: React.FC<HolographicCardProps> = ({ children, clas
   >
     {children}
   </motion.div>
-)
-
-interface HolographicInputProps {
-  label: string;
-  value: string | number;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  type?: string;
-}
-
-export const HolographicInput: React.FC<HolographicInputProps> = ({ 
-  label, 
-  value, 
-  onChange, 
-  type = 'text' 
-}) => (
-  <div className="mb-4">
-    <label className="block text-cyan-500 mb-2">{label}</label>
-    <input
-      type={type}
-      value={value}
-      onChange={onChange}
-      className="w-full bg-transparent border border-cyan-500 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-    />
-  </div>
 ) 

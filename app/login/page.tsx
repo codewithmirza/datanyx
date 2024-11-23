@@ -44,7 +44,7 @@ export default function LoginPage() {
         <Card className="w-[400px] bg-black/80 backdrop-blur-lg border-cyan-500/30">
           <CardHeader>
             <CardTitle className="text-xl text-cyan-500">
-              {isLogin ? 'Welcome Back' : 'Create Account'}
+              {isLogin ? 'Welcome to SmartFinance.AI' : 'Join SmartFinance.AI'}
             </CardTitle>
             <CardDescription className="text-gray-300">
               {isLogin 

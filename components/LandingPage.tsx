@@ -71,7 +71,7 @@ export default function LandingPage() {
         <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="flex items-center space-x-2">
             <GraduationCap className="w-8 h-8 text-cyan-500" />
-            <span className="text-xl font-bold text-cyan-500">FinMate.AI</span>
+            <span className="text-xl font-bold text-cyan-500">SmartFinance.AI</span>
           </div>
           <div className="flex items-center space-x-4">
             <Button variant="ghost" className="text-cyan-500">Features</Button>
@@ -162,7 +162,7 @@ export default function LandingPage() {
         {/* Footer */}
         <footer className="py-8 px-4 bg-black/50 backdrop-blur-lg">
           <div className="max-w-6xl mx-auto text-center text-gray-400">
-            <p>© 2024 FinMate.AI. All rights reserved.</p>
+            <p>© 2024 SmartFinance.AI. All rights reserved.</p>
           </div>
         </footer>
       </div>

@@ -26,7 +26,7 @@ export function DataViz() {
         anchorX="center"
         anchorY="middle"
       >
-        FinMate.AI Dashboard
+        SmartFinance.AI Dashboard
       </Text>
     </group>
   )
