@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Loader2, AlertTriangle, CheckCircle2, TrendingUp, Briefcase, GraduationCap, DollarSign, CreditCard, PiggyBank, TrendingDown, History, Brain, Scissors, User } from 'lucide-react'
+import { Loader2, AlertTriangle, CheckCircle2, TrendingUp, Briefcase, GraduationCap, DollarSign, CreditCard, PiggyBank, TrendingDown, History, Brain, Scissors, User, Percent, Clock } from 'lucide-react'
 import { Line, Bar, Radar, Doughnut } from 'react-chartjs-2'
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, RadialLinearScale, ArcElement, Title, Tooltip, Legend, Filler } from 'chart.js'
 import DashboardScene from './DashboardScene'
@@ -36,24 +36,70 @@ interface StatCardProps {
   icon: LucideIcon;
   trend?: number;
   className?: string;
+  editable?: boolean;
+  onUpdate?: (value: number) => void;
+  prefix?: string;
+  suffix?: string;
 }
 
 // Update the StatCard component with proper typing
-const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, trend, className = '' }) => (
-  <div className={`flex items-center p-4 rounded-lg bg-black/30 border border-cyan-500/30 ${className}`}>
-    <Icon className="w-8 h-8 text-cyan-500 mr-3" />
-    <div>
-      <p className="text-sm text-gray-400">{title}</p>
-      <p className="text-xl font-bold text-white">{value}</p>
-    </div>
-    {trend !== undefined && (
-      <div className={`ml-auto ${trend > 0 ? 'text-green-500' : 'text-red-500'}`}>
-        {trend > 0 ? <TrendingUp /> : <TrendingDown />}
-        <span className="text-sm">{Math.abs(trend)}%</span>
+const StatCard: React.FC<StatCardProps> = ({ 
+  title, 
+  value, 
+  icon: Icon, 
+  trend, 
+  className = '',
+  editable = false,
+  onUpdate,
+  prefix = '',
+  suffix = ''
+}) => {
+  const [isEditing, setIsEditing] = useState(false)
+  const [editValue, setEditValue] = useState(value)
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (onUpdate) {
+      onUpdate(Number(editValue))
+    }
+    setIsEditing(false)
+  }
+
+  return (
+    <div 
+      className={`flex items-center p-4 rounded-lg bg-black/30 border border-cyan-500/30 ${className}`}
+      onClick={() => editable && setIsEditing(true)}
+    >
+      <Icon className="w-8 h-8 text-cyan-500 mr-3" />
+      <div className="flex-grow">
+        <p className="text-sm text-gray-400">{title}</p>
+        {isEditing ? (
+          <form onSubmit={handleSubmit} className="flex items-center gap-2">
+            <Input
+              type="number"
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              className="bg-black/30 border-cyan-500/30 text-white w-24"
+              autoFocus
+              onBlur={handleSubmit}
+            />
+            {suffix}
+          </form>
+        ) : (
+          <p className="text-xl font-bold text-white">
+            {prefix}{typeof value === 'number' ? value.toLocaleString() : value}{suffix}
+          </p>
+        )}
       </div>
-    )}
-  </div>
-)
+      {trend !== undefined && (
+        <div className={`ml-auto ${trend > 0 ? 'text-green-500' : 'text-red-500'}`}>
+          {trend > 0 ? <TrendingUp /> : <TrendingDown />}
+          <span className="text-sm">{Math.abs(trend)}%</span>
+        </div>
+      )}
+    </div>
+  )
+}
 
 // Add interface for API response
 interface APIResponse {
@@ -86,12 +132,14 @@ export default function Dashboard() {
     country: 'USA',
   })
 
-  // Add new state for financial metrics
+  // Update metrics state to include editable fields
   const [metrics, setMetrics] = useState({
-    totalLoan: 50000,
+    totalLoan: userData.loanAmount,
     monthlyPayment: 500,
     savingsRate: 15,
-    riskScore: 75
+    riskScore: 75,
+    interestRate: userData.interestRate || 5.5,
+    repaymentTerm: userData.repaymentTerm || 120
   })
 
   // Add financial recommendations
@@ -178,6 +226,61 @@ export default function Dashboard() {
     { id: 'profile', label: 'Profile', icon: User }
   ]
 
+  // Add function to recalculate loan timeline data
+  const calculateLoanTimeline = useCallback(() => {
+    const monthlyRate = metrics.interestRate / 1200
+    const totalPayments = metrics.repaymentTerm
+    const monthlyPayment = (metrics.totalLoan * monthlyRate * Math.pow(1 + monthlyRate, totalPayments)) / (Math.pow(1 + monthlyRate, totalPayments) - 1)
+    
+    let balance = metrics.totalLoan
+    const timelineData = []
+    
+    for (let i = 0; i <= 5; i++) {
+      timelineData.push({
+        month: i * 12,
+        balance: Math.round(balance)
+      })
+      balance = balance * (1 + monthlyRate) - monthlyPayment * 12
+    }
+
+    return timelineData
+  }, [metrics.totalLoan, metrics.interestRate, metrics.repaymentTerm])
+
+  // Update userData when profile changes
+  const handleProfileUpdate = (newData: Partial<typeof userData>) => {
+    setUserData(prev => {
+      const updated = { ...prev, ...newData }
+      // Update metrics based on new user data
+      setMetrics(prev => ({
+        ...prev,
+        totalLoan: updated.loanAmount,
+        monthlyPayment: calculateMonthlyPayment(updated.loanAmount, metrics.interestRate, metrics.repaymentTerm)
+      }))
+      return updated
+    })
+  }
+
+  // Add function to handle metric updates
+  const handleMetricUpdate = (field: string, value: number) => {
+    setMetrics(prev => ({
+      ...prev,
+      [field]: value,
+      monthlyPayment: field === 'totalLoan' || field === 'interestRate' || field === 'repaymentTerm' 
+        ? calculateMonthlyPayment(
+            field === 'totalLoan' ? value : prev.totalLoan,
+            field === 'interestRate' ? value : prev.interestRate,
+            field === 'repaymentTerm' ? value : prev.repaymentTerm
+          )
+        : prev.monthlyPayment
+    }))
+  }
+
+  // Helper function to calculate monthly payment
+  const calculateMonthlyPayment = (loan: number, rate: number, term: number) => {
+    const monthlyRate = rate / 1200
+    return Math.round((loan * monthlyRate * Math.pow(1 + monthlyRate, term)) / (Math.pow(1 + monthlyRate, term) - 1))
+  }
+
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Background Scene */}
@@ -230,26 +333,34 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                   <StatCard 
                     title="Total Loan" 
-                    value={`$${metrics.totalLoan.toLocaleString()}`}
+                    value={metrics.totalLoan}
                     icon={CreditCard}
+                    editable={true}
+                    onUpdate={(value) => handleMetricUpdate('totalLoan', value)}
+                    prefix="$"
                   />
                   <StatCard 
                     title="Monthly Payment" 
-                    value={`$${metrics.monthlyPayment}`}
+                    value={metrics.monthlyPayment}
                     icon={DollarSign}
                     trend={-2.5}
+                    prefix="$"
                   />
                   <StatCard 
-                    title="Savings Rate" 
-                    value={`${metrics.savingsRate}%`}
-                    icon={PiggyBank}
-                    trend={5.2}
+                    title="Interest Rate" 
+                    value={metrics.interestRate}
+                    icon={Percent}
+                    editable={true}
+                    onUpdate={(value) => handleMetricUpdate('interestRate', value)}
+                    suffix="%"
                   />
                   <StatCard 
-                    title="Risk Score" 
-                    value={metrics.riskScore}
-                    icon={AlertTriangle}
-                    trend={-1.5}
+                    title="Loan Term" 
+                    value={metrics.repaymentTerm}
+                    icon={Clock}
+                    editable={true}
+                    onUpdate={(value) => handleMetricUpdate('repaymentTerm', value)}
+                    suffix=" months"
                   />
 
                   <div className="lg:col-span-2">
@@ -257,10 +368,10 @@ export default function Dashboard() {
                       <h3 className="text-xl font-bold mb-4">Loan Repayment Timeline</h3>
                       <Line
                         data={{
-                          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                          labels: calculateLoanTimeline().map(d => `Month ${d.month}`),
                           datasets: [{
                             label: 'Projected Balance',
-                            data: [50000, 48000, 46000, 44000, 42000, 40000],
+                            data: calculateLoanTimeline().map(d => d.balance),
                             borderColor: '#06b6d4',
                             backgroundColor: 'rgba(6, 182, 212, 0.1)',
                             fill: true,
@@ -274,15 +385,12 @@ export default function Dashboard() {
                           scales: {
                             y: {
                               beginAtZero: false,
-                              grid: {
-                                color: 'rgba(255, 255, 255, 0.1)',
-                              },
+                              grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                              ticks: { callback: (value) => `$${value}` }
                             },
                             x: {
-                              grid: {
-                                color: 'rgba(255, 255, 255, 0.1)',
-                              },
-                            },
+                              grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            }
                           },
                         }}
                       />
