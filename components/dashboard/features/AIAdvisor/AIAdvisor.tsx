@@ -1,17 +1,34 @@
 import { useState, useEffect } from 'react'
 import { HolographicCard } from '@/components/dashboard/HolographicUI'
-import { AlertTriangle, PiggyBank, DollarSign, Send, Bot } from 'lucide-react'
+import { Bot, Send, AlertTriangle, PiggyBank, DollarSign, TrendingUp } from 'lucide-react'
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Line, Bar, Doughnut } from 'react-chartjs-2'
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
   reaction?: '👍' | '👎' | null;
+  visualData?: {
+    type: 'line' | 'bar' | 'doughnut' | null;
+    data?: any;
+  };
 }
 
+interface ChatResponse {
+  response: string;
+}
+
+interface AIAdvisorProps {
+  userData: {
+    monthlyIncome: number;
+    monthlyExpenses: number;
+    country: string;
+  }
+}
+
+// Add interface for Gemini API response
 interface GeminiResponse {
   candidates: Array<{
     content: {
@@ -22,65 +39,106 @@ interface GeminiResponse {
   }>;
 }
 
-interface AIResponse {
-  data: {
-    recommendations: {
-      advice: string;
-      relevantData: any[];
-    };
-  };
-}
-
-interface AIAdvisorProps {
-  userData: {
-    loanAmount: number;
-    monthlyIncome: number;
-    monthlyExpenses: number;
-    country: string;
-    university: string;
-  }
-}
-
-// Gemini API configuration
-const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
-const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
-
 export function AIAdvisor({ userData }: AIAdvisorProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: `Welcome! I'm your AI Financial Advisor. I can help you with:
-
-1. 💰 Loan Management & Financial Aid
-   - Government grants and scholarships
-   - Student-specific financial schemes
-   - Efficient loan repayment strategies
-
-2. 📊 Budget Optimization
-   - Cost-of-living adjustments for ${userData.country}
-   - Smart spending recommendations
-   - Expense tracking and reduction
-
-3. 💹 Investment Opportunities
-   - Student-friendly stock investments
-   - Cryptocurrency opportunities and airdrops
-   - Risk-managed portfolio suggestions
-
-4. 💸 Extra Income Sources
-   - Part-time work opportunities
-   - Freelancing suggestions
-   - Side hustle ideas
-
-What would you like to learn more about?`,
-      timestamp: new Date()
+      content: "Hi! I'm your AI Financial Advisor. Ask me anything about your finances, loans, or budgeting.",
+      timestamp: new Date(),
+      visualData: {
+        type: null,
+        data: null
+      }
     }
   ])
   const [inputMessage, setInputMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null)
 
-  const sendMessageToGemini = async (prompt: string) => {
+  // Function to detect if query might need visualization
+  const detectVisualizationType = (query: string): 'line' | 'bar' | 'doughnut' | null => {
+    const keywords = {
+      line: ['trend', 'over time', 'timeline', 'progress', 'forecast', 'prediction'],
+      bar: ['compare', 'comparison', 'difference', 'versus', 'breakdown'],
+      doughnut: ['distribution', 'allocation', 'split', 'ratio', 'percentage']
+    }
+
+    for (const [type, words] of Object.entries(keywords)) {
+      if (words.some(word => query.toLowerCase().includes(word))) {
+        return type as 'line' | 'bar' | 'doughnut'
+      }
+    }
+    return null
+  }
+
+  // Generate sample visualization data based on query type
+  const generateVisualizationData = (type: 'line' | 'bar' | 'doughnut', query: string) => {
+    switch (type) {
+      case 'line':
+        return {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+          datasets: [{
+            label: 'Projected Savings',
+            data: Array(6).fill(0).map(() => Math.random() * userData.monthlyIncome),
+            borderColor: 'rgba(6, 182, 212, 1)',
+            backgroundColor: 'rgba(6, 182, 212, 0.1)',
+            fill: true
+          }]
+        }
+      case 'bar':
+        return {
+          labels: ['Income', 'Expenses', 'Savings'],
+          datasets: [{
+            data: [
+              userData.monthlyIncome,
+              userData.monthlyExpenses,
+              userData.monthlyIncome - userData.monthlyExpenses
+            ],
+            backgroundColor: [
+              'rgba(6, 182, 212, 0.8)',
+              'rgba(239, 68, 68, 0.8)',
+              'rgba(34, 197, 94, 0.8)'
+            ]
+          }]
+        }
+      case 'doughnut':
+        return {
+          labels: ['Essential', 'Non-Essential', 'Savings'],
+          datasets: [{
+            data: [60, 25, 15],
+            backgroundColor: [
+              'rgba(6, 182, 212, 0.8)',
+              'rgba(239, 68, 68, 0.8)',
+              'rgba(34, 197, 94, 0.8)'
+            ]
+          }]
+        }
+      default:
+        return null
+    }
+  }
+
+  const sendMessage = async () => {
+    if (!inputMessage.trim()) return
+
+    const visualType = detectVisualizationType(inputMessage)
+    const userMessage: Message = {
+      role: 'user',
+      content: inputMessage,
+      timestamp: new Date(),
+      visualData: {
+        type: visualType,
+        data: visualType ? generateVisualizationData(visualType, inputMessage) : null
+      }
+    }
+
+    setMessages(prev => [...prev, userMessage])
+    setInputMessage('')
+    setIsLoading(true)
+    setSelectedMessage(userMessage)
+
     try {
-      const response = await fetch(`${API_URL}?key=${API_KEY}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=AIzaSyC02ExBGWIFc7T4tcPAogisEtjLtdOg7EE`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -88,132 +146,94 @@ What would you like to learn more about?`,
         body: JSON.stringify({
           contents: [{
             parts: [{
-              text: `As an AI financial advisor, analyze this situation:
-                - Country: ${userData.country}
-                - University: ${userData.university}
+              text: `As an AI financial advisor for students, analyze this situation:
                 - Monthly Income: $${userData.monthlyIncome}
                 - Monthly Expenses: $${userData.monthlyExpenses}
-                - Loan Amount: $${userData.loanAmount}
+                - Country: ${userData.country}
                 
-                User Question: ${prompt}
+                User Question: ${inputMessage}
                 
-                Provide specific, actionable advice focusing on:
-                1. Loan Management & Financial Aid
-                2. Budget Optimization
-                3. Investment Opportunities
-                4. Extra Income Sources`
+                Provide specific, actionable advice in plain text. Focus on student-specific financial aid, scholarships, grants, and cost-saving strategies.`
             }]
-          }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024,
+          },
+          safetySettings: [
+            {
+              category: "HARM_CATEGORY_HARASSMENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            }
+          ]
         })
-      });
+      })
 
-      if (!response.ok) {
-        throw new Error('Failed to get AI response');
-      }
-
-      const data = await response.json() as GeminiResponse;
+      if (!response.ok) throw new Error('Failed to get response')
       
-      if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
-        return data.candidates[0].content.parts[0].text;
-      } else {
-        throw new Error('No valid response found in the API result');
-      }
-    } catch (error) {
-      console.error('Error calling Gemini API:', error);
-      throw error;
-    }
-  }
-
-  const sendMessage = async () => {
-    if (!inputMessage.trim()) return;
-
-    const userMessage: Message = {
-      role: 'user',
-      content: inputMessage,
-      timestamp: new Date(),
-      reaction: null
-    };
-    setMessages(prev => [...prev, userMessage]);
-    setInputMessage('');
-    setIsLoading(true);
-
-    try {
-      const aiResponse = await sendMessageToGemini(inputMessage);
+      const data = await response.json() as GeminiResponse
+      
+      // Extract the text response from Gemini's response format
+      const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate a response.'
       
       const aiMessage: Message = {
         role: 'assistant',
         content: aiResponse,
         timestamp: new Date(),
-        reaction: null
-      };
-      setMessages(prev => [...prev, aiMessage]);
-    } catch (error) {
-      const errorMessage: Message = {
-        role: 'assistant',
-        content: `I apologize, but I encountered an error: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`,
-        timestamp: new Date(),
-        reaction: null
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        visualData: userMessage.visualData // Keep the same visualization for context
+      }
 
-  const handleReaction = (index: number, reaction: '👍' | '👎') => {
-    setMessages(messages.map((msg, i) => 
-      i === index ? { ...msg, reaction } : msg
-    ));
-  };
+      setMessages(prev => [...prev, aiMessage])
+      setSelectedMessage(aiMessage)
+    } catch (error) {
+      console.error('Error:', error)
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'I apologize, but I encountered an error. Please try asking your question again.',
+        timestamp: new Date(),
+        visualData: { type: null, data: null }
+      }])
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
-    <div className="grid grid-cols-1 gap-6">
-      <HolographicCard className="h-[600px] flex flex-col">
+    <div className="flex w-full gap-6">
+      {/* Chat Interface - Left Half */}
+      <HolographicCard className="w-1/2 h-[calc(100vh-12rem)] flex flex-col">
         <div className="flex items-center gap-2 mb-4">
           <Bot className="w-6 h-6 text-cyan-500" />
           <h3 className="text-xl font-bold">AI Financial Advisor</h3>
         </div>
 
-        {/* Chat Messages */}
-        <ScrollArea className="flex-grow mb-4 h-[400px]">
+        {/* Chat Messages Container */}
+        <div 
+          className="flex-1 overflow-y-auto custom-scrollbar"
+          style={{ 
+            scrollBehavior: 'smooth',
+            minHeight: '0' // This is crucial for flex overflow to work
+          }}
+        >
           <div className="space-y-4 p-4">
             {messages.map((message, index) => (
               <div
                 key={index}
-                className={`flex ${
-                  message.role === 'assistant' ? 'justify-start' : 'justify-end'
-                }`}
+                className={`flex ${message.role === 'assistant' ? 'justify-start' : 'justify-end'}`}
+                onClick={() => setSelectedMessage(message)}
               >
                 <div
-                  className={`max-w-[80%] rounded-lg p-4 ${
+                  className={`max-w-[80%] rounded-lg p-4 cursor-pointer transition-all duration-300 hover:scale-[1.02] ${
                     message.role === 'assistant'
                       ? 'bg-gray-800 text-white'
                       : 'bg-cyan-500 text-white'
-                  }`}
+                  } ${selectedMessage === message ? 'ring-2 ring-cyan-500' : ''}`}
                 >
-                  <pre className="whitespace-pre-wrap font-sans">{message.content}</pre>
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="text-xs text-gray-400">
-                      {message.timestamp.toLocaleTimeString()}
-                    </div>
-                    {message.role === 'assistant' && (
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={() => handleReaction(index, '👍')}
-                          className={`p-1 rounded ${message.reaction === '👍' ? 'bg-cyan-500' : ''}`}
-                        >
-                          👍
-                        </button>
-                        <button 
-                          onClick={() => handleReaction(index, '👎')}
-                          className={`p-1 rounded ${message.reaction === '👎' ? 'bg-cyan-500' : ''}`}
-                        >
-                          👎
-                        </button>
-                      </div>
-                    )}
+                  <p className="whitespace-pre-wrap font-sans">{message.content}</p>
+                  <div className="text-xs text-gray-400 mt-2">
+                    {message.timestamp.toLocaleTimeString()}
                   </div>
                 </div>
               </div>
@@ -230,59 +250,110 @@ What would you like to learn more about?`,
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
 
-        {/* Input Area */}
-        <div className="flex gap-2">
-          <Input
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-            placeholder="Ask me about your finances..."
-            className="flex-grow bg-gray-900 border-gray-700"
-          />
-          <Button
-            onClick={sendMessage}
-            disabled={isLoading || !inputMessage.trim()}
-            className="bg-cyan-500 hover:bg-cyan-600"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
+        {/* Input Area - Fixed at bottom */}
+        <div className="mt-4 border-t border-gray-800 pt-4 bg-black/30">
+          <div className="flex gap-2">
+            <Input
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+              placeholder="Ask about your finances..."
+              className="flex-grow bg-gray-900 border-gray-700"
+            />
+            <button
+              onClick={sendMessage}
+              disabled={isLoading || !inputMessage.trim()}
+              className="p-2 rounded-lg bg-cyan-500 text-white hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </HolographicCard>
 
-      {/* Financial Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <HolographicCard>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400">Risk Level</p>
-              <p className="text-2xl font-bold">Medium</p>
-            </div>
-            <AlertTriangle className="w-8 h-8 text-cyan-500" />
-          </div>
-        </HolographicCard>
+      {/* Visualization Panel - Right Half */}
+      <HolographicCard className="w-1/2 h-[calc(100vh-12rem)] flex flex-col">
+        <div className="flex items-center gap-2 mb-4">
+          <TrendingUp className="w-6 h-6 text-cyan-500" />
+          <h3 className="text-xl font-bold">Visual Insights</h3>
+        </div>
 
-        <HolographicCard>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400">Monthly Savings</p>
-              <p className="text-2xl font-bold">${userData.monthlyIncome - userData.monthlyExpenses}</p>
+        <div className="flex-grow flex items-center justify-center p-4">
+          {selectedMessage?.visualData?.type ? (
+            <div className="w-full h-full">
+              {selectedMessage.visualData.type === 'line' && (
+                <Line
+                  data={selectedMessage.visualData.data}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: 'white' }
+                      },
+                      x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: 'white' }
+                      }
+                    }
+                  }}
+                />
+              )}
+              {selectedMessage.visualData.type === 'bar' && (
+                <Bar
+                  data={selectedMessage.visualData.data}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: 'white' }
+                      },
+                      x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: 'white' }
+                      }
+                    }
+                  }}
+                />
+              )}
+              {selectedMessage.visualData.type === 'doughnut' && (
+                <Doughnut
+                  data={selectedMessage.visualData.data}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: 'bottom',
+                        labels: { color: 'white' }
+                      }
+                    }
+                  }}
+                />
+              )}
             </div>
-            <PiggyBank className="w-8 h-8 text-cyan-500" />
-          </div>
-        </HolographicCard>
-
-        <HolographicCard>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400">Loan Amount</p>
-              <p className="text-2xl font-bold">${userData.loanAmount}</p>
+          ) : (
+            <div className="text-center text-gray-400">
+              <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-cyan-500/50" />
+              <p>No visualization available for this query.</p>
+              <p className="text-sm mt-2">Try asking about trends, comparisons, or distributions.</p>
+              <div className="mt-6 space-y-2 text-left max-w-md mx-auto">
+                <p className="text-sm text-cyan-500">Example queries:</p>
+                <p className="text-sm">"Show me the trend of my savings over time"</p>
+                <p className="text-sm">"Compare my income and expenses"</p>
+                <p className="text-sm">"What's the distribution of my monthly spending?"</p>
+              </div>
             </div>
-            <DollarSign className="w-8 h-8 text-cyan-500" />
-          </div>
-        </HolographicCard>
-      </div>
+          )}
+        </div>
+      </HolographicCard>
     </div>
   )
 } 

@@ -566,7 +566,7 @@ export default function Dashboard() {
 
               {/* AI Advisor Tab */}
               {activeTab === 'ai-advisor' && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="w-full">
                   <AIAdvisor userData={userData} />
                 </div>
               )}
