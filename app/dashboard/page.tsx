@@ -573,7 +573,7 @@ export default function Dashboard() {
 
               {/* Cost Cutter Tab */}
               {activeTab === 'cost-cutter' && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="w-full">
                   <CostCutter userData={userData} />
                 </div>
               )}
@@ -587,70 +587,208 @@ export default function Dashboard() {
 
               {/* Existing profile content */}
               {activeTab === 'profile' && (
-                <HolographicCard>
-                  <h2 className="text-2xl font-bold mb-6">User Profile</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
+                <div className="space-y-6">
+                  {/* Profile Header */}
+                  <HolographicCard className="relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-purple-500/10" />
+                    <div className="relative z-10 flex items-center gap-6">
+                      <motion.div 
+                        className="w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center"
+                        animate={{ 
+                          boxShadow: ['0 0 20px rgba(6, 182, 212, 0.3)', '0 0 40px rgba(6, 182, 212, 0.5)', '0 0 20px rgba(6, 182, 212, 0.3)']
+                        }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <User className="w-12 h-12 text-white" />
+                      </motion.div>
                       <div>
-                        <Label className="text-gray-300">Name</Label>
-                        <Input 
-                          value={userData.name}
-                          className="bg-black/30 border-cyan-500/30 text-white"
-                          onChange={(e) => setUserData({...userData, name: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-gray-300">Email</Label>
-                        <Input 
-                          value={userData.email}
-                          className="bg-black/30 border-cyan-500/30 text-white"
-                          onChange={(e) => setUserData({...userData, email: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-gray-300">University</Label>
-                        <Input 
-                          value={userData.university}
-                          className="bg-black/30 border-cyan-500/30 text-white"
-                          onChange={(e) => setUserData({...userData, university: e.target.value})}
-                        />
+                        <motion.h2 
+                          className="text-3xl font-bold bg-gradient-to-r from-cyan-500 to-purple-500 bg-clip-text text-transparent"
+                          animate={{ opacity: [0.5, 1, 0.5] }}
+                          transition={{ duration: 3, repeat: Infinity }}
+                        >
+                          {userData.name}
+                        </motion.h2>
+                        <p className="text-gray-400">{userData.email}</p>
                       </div>
                     </div>
-                    <div className="space-y-4">
-                      <div>
-                        <Label className="text-gray-300">Monthly Income</Label>
-                        <Input 
-                          type="number"
-                          value={userData.monthlyIncome}
-                          className="bg-black/30 border-cyan-500/30 text-white"
-                          onChange={(e) => setUserData({...userData, monthlyIncome: Number(e.target.value)})}
-                        />
+                  </HolographicCard>
+
+                  {/* Profile Content */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Personal Information */}
+                    <HolographicCard>
+                      <h3 className="text-xl font-bold mb-6 flex items-center">
+                        <User className="w-6 h-6 text-cyan-500 mr-2" />
+                        Personal Information
+                      </h3>
+                      <div className="space-y-6">
+                        <div className="relative">
+                          <Label className="text-gray-300">Full Name</Label>
+                          <div className="relative">
+                            <Input 
+                              value={userData.name}
+                              className="bg-black/30 border-cyan-500/30 text-white focus:border-cyan-500 transition-all"
+                              onChange={(e) => setUserData({...userData, name: e.target.value})}
+                            />
+                            <motion.div 
+                              className="absolute inset-0 border border-cyan-500/30 rounded-md pointer-events-none"
+                              animate={{ opacity: [0.3, 0.6, 0.3] }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="relative">
+                          <Label className="text-gray-300">Email Address</Label>
+                          <div className="relative">
+                            <Input 
+                              value={userData.email}
+                              className="bg-black/30 border-cyan-500/30 text-white focus:border-cyan-500 transition-all"
+                              onChange={(e) => setUserData({...userData, email: e.target.value})}
+                            />
+                            <motion.div 
+                              className="absolute inset-0 border border-cyan-500/30 rounded-md pointer-events-none"
+                              animate={{ opacity: [0.3, 0.6, 0.3] }}
+                              transition={{ duration: 2, repeat: Infinity, delay: 0.3 }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="relative">
+                          <Label className="text-gray-300">University</Label>
+                          <div className="relative">
+                            <Input 
+                              value={userData.university}
+                              className="bg-black/30 border-cyan-500/30 text-white focus:border-cyan-500 transition-all"
+                              onChange={(e) => setUserData({...userData, university: e.target.value})}
+                            />
+                            <motion.div 
+                              className="absolute inset-0 border border-cyan-500/30 rounded-md pointer-events-none"
+                              animate={{ opacity: [0.3, 0.6, 0.3] }}
+                              transition={{ duration: 2, repeat: Infinity, delay: 0.6 }}
+                            />
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <Label className="text-gray-300">Monthly Expenses</Label>
-                        <Input 
-                          type="number"
-                          value={userData.monthlyExpenses}
-                          className="bg-black/30 border-cyan-500/30 text-white"
-                          onChange={(e) => setUserData({...userData, monthlyExpenses: Number(e.target.value)})}
-                        />
+                    </HolographicCard>
+
+                    {/* Financial Information */}
+                    <HolographicCard>
+                      <h3 className="text-xl font-bold mb-6 flex items-center">
+                        <DollarSign className="w-6 h-6 text-cyan-500 mr-2" />
+                        Financial Information
+                      </h3>
+                      <div className="space-y-6">
+                        <div className="relative">
+                          <Label className="text-gray-300">Monthly Income</Label>
+                          <div className="relative">
+                            <Input 
+                              type="number"
+                              value={userData.monthlyIncome}
+                              className="bg-black/30 border-cyan-500/30 text-white focus:border-cyan-500 transition-all"
+                              onChange={(e) => setUserData({...userData, monthlyIncome: Number(e.target.value)})}
+                            />
+                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                              <span className="text-cyan-500">USD</span>
+                            </div>
+                            <motion.div 
+                              className="absolute inset-0 border border-cyan-500/30 rounded-md pointer-events-none"
+                              animate={{ opacity: [0.3, 0.6, 0.3] }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="relative">
+                          <Label className="text-gray-300">Monthly Expenses</Label>
+                          <div className="relative">
+                            <Input 
+                              type="number"
+                              value={userData.monthlyExpenses}
+                              className="bg-black/30 border-cyan-500/30 text-white focus:border-cyan-500 transition-all"
+                              onChange={(e) => setUserData({...userData, monthlyExpenses: Number(e.target.value)})}
+                            />
+                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                              <span className="text-cyan-500">USD</span>
+                            </div>
+                            <motion.div 
+                              className="absolute inset-0 border border-cyan-500/30 rounded-md pointer-events-none"
+                              animate={{ opacity: [0.3, 0.6, 0.3] }}
+                              transition={{ duration: 2, repeat: Infinity, delay: 0.3 }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="relative">
+                          <Label className="text-gray-300">Country</Label>
+                          <div className="relative">
+                            <Input 
+                              value={userData.country}
+                              className="bg-black/30 border-cyan-500/30 text-white focus:border-cyan-500 transition-all"
+                              onChange={(e) => setUserData({...userData, country: e.target.value})}
+                            />
+                            <motion.div 
+                              className="absolute inset-0 border border-cyan-500/30 rounded-md pointer-events-none"
+                              animate={{ opacity: [0.3, 0.6, 0.3] }}
+                              transition={{ duration: 2, repeat: Infinity, delay: 0.6 }}
+                            />
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <Label className="text-gray-300">Country</Label>
-                        <Input 
-                          value={userData.country}
-                          className="bg-black/30 border-cyan-500/30 text-white"
-                          onChange={(e) => setUserData({...userData, country: e.target.value})}
-                        />
+                    </HolographicCard>
+
+                    {/* Profile Stats */}
+                    <HolographicCard>
+                      <h3 className="text-xl font-bold mb-6 flex items-center">
+                        <TrendingUp className="w-6 h-6 text-cyan-500 mr-2" />
+                        Profile Statistics
+                      </h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-4 bg-black/30 rounded-lg border border-cyan-500/30">
+                          <p className="text-gray-400 text-sm">Savings Rate</p>
+                          <p className="text-2xl font-bold text-cyan-500">
+                            {Math.round((userData.monthlyIncome - userData.monthlyExpenses) / userData.monthlyIncome * 100)}%
+                          </p>
+                        </div>
+                        <div className="p-4 bg-black/30 rounded-lg border border-cyan-500/30">
+                          <p className="text-gray-400 text-sm">Debt-to-Income</p>
+                          <p className="text-2xl font-bold text-cyan-500">
+                            {Math.round((metrics.totalLoan / (userData.monthlyIncome * 12)) * 100)}%
+                          </p>
+                        </div>
+                        <div className="p-4 bg-black/30 rounded-lg border border-cyan-500/30">
+                          <p className="text-gray-400 text-sm">Monthly Savings</p>
+                          <p className="text-2xl font-bold text-cyan-500">
+                            ${(userData.monthlyIncome - userData.monthlyExpenses).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="p-4 bg-black/30 rounded-lg border border-cyan-500/30">
+                          <p className="text-gray-400 text-sm">Risk Score</p>
+                          <p className="text-2xl font-bold text-cyan-500">
+                            {metrics.riskScore}/100
+                          </p>
+                        </div>
                       </div>
-                    </div>
+                    </HolographicCard>
+
+                    {/* Save Changes Button */}
+                    <motion.div 
+                      className="lg:col-span-2 flex justify-end"
+                      whileHover={{ scale: 1.02 }}
+                    >
+                      <HolographicButton 
+                        onClick={() => {
+                          // Handle profile update
+                          console.log('Profile updated')
+                        }}
+                        className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-8"
+                      >
+                        Save Changes
+                      </HolographicButton>
+                    </motion.div>
                   </div>
-                  <div className="mt-6 flex justify-end">
-                    <HolographicButton onClick={() => console.log('Profile updated')}>
-                      Save Changes
-                    </HolographicButton>
-                  </div>
-                </HolographicCard>
+                </div>
               )}
             </motion.div>
           )}

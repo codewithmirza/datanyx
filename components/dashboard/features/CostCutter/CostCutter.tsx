@@ -105,10 +105,11 @@ export function CostCutter({ userData }: CostCutterProps) {
   }
 
   return (
-    <>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Expense Overview */}
-        <HolographicCard>
+    <div className="space-y-6 w-full">
+      {/* First Row: Two Charts Side by Side */}
+      <div className="flex flex-col lg:flex-row gap-6 w-full">
+        {/* Expense Overview (Left) */}
+        <HolographicCard className="flex-1">
           <h3 className="text-xl font-bold mb-4 flex items-center">
             <Scissors className="w-6 h-6 text-cyan-500 mr-2" />
             Expense Analysis
@@ -122,9 +123,7 @@ export function CostCutter({ userData }: CostCutterProps) {
                 plugins: {
                   legend: {
                     position: 'right',
-                    labels: {
-                      color: 'white'
-                    }
+                    labels: { color: 'white' }
                   }
                 }
               }}
@@ -132,8 +131,8 @@ export function CostCutter({ userData }: CostCutterProps) {
           </div>
         </HolographicCard>
 
-        {/* Savings Potential */}
-        <HolographicCard>
+        {/* Savings Potential (Right) */}
+        <HolographicCard className="flex-1">
           <h3 className="text-xl font-bold mb-4 flex items-center">
             <PiggyBank className="w-6 h-6 text-cyan-500 mr-2" />
             Savings Potential
@@ -167,78 +166,74 @@ export function CostCutter({ userData }: CostCutterProps) {
         </HolographicCard>
       </div>
 
-      {/* Detailed Analysis */}
-      <div className="mt-6">
-        <HolographicCard>
-          <h3 className="text-xl font-bold mb-4 flex items-center">
-            <AlertTriangle className="w-6 h-6 text-cyan-500 mr-2" />
-            Smart Recommendations
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {expenseCategories.map((category, index) => (
-              <div key={index} className="p-4 bg-black/30 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center">
-                    <category.icon className="w-5 h-5 text-cyan-500 mr-2" />
-                    <h4 className="font-bold">{category.category}</h4>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-gray-400">Current</p>
-                    <p className="font-bold">${category.amount.toFixed(0)}</p>
-                  </div>
+      {/* Second Row: Smart Recommendations */}
+      <HolographicCard>
+        <h3 className="text-xl font-bold mb-4 flex items-center">
+          <AlertTriangle className="w-6 h-6 text-cyan-500 mr-2" />
+          Smart Recommendations
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {expenseCategories.map((category, index) => (
+            <div key={index} className="p-4 bg-black/30 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center">
+                  <category.icon className="w-5 h-5 text-cyan-500 mr-2" />
+                  <h4 className="font-bold">{category.category}</h4>
                 </div>
-                <div className="mb-2">
-                  <div className="h-2 bg-black/50 rounded-full">
-                    <div 
-                      className="h-full bg-cyan-500 rounded-full"
-                      style={{ width: `${(category.potential / category.amount) * 100}%` }}
-                    />
-                  </div>
-                </div>
-                <div className="text-sm text-gray-400">
-                  <p className="text-green-500 font-bold mb-2">
-                    Potential Savings: ${(category.amount - category.potential).toFixed(0)}/month
-                  </p>
-                  <ul className="list-disc list-inside space-y-1">
-                    {category.tips.map((tip, tipIndex) => (
-                      <li key={tipIndex}>{tip}</li>
-                    ))}
-                  </ul>
+                <div className="text-right">
+                  <p className="text-sm text-gray-400">Current</p>
+                  <p className="font-bold">${category.amount.toFixed(0)}</p>
                 </div>
               </div>
-            ))}
-          </div>
-        </HolographicCard>
-      </div>
-
-      {/* Location-Based Analysis */}
-      <div className="mt-6">
-        <HolographicCard>
-          <h3 className="text-xl font-bold mb-4 flex items-center">
-            <DollarSign className="w-6 h-6 text-cyan-500 mr-2" />
-            Cost of Living Analysis - {userData.country}
-          </h3>
-          <div className="p-4 bg-black/30 rounded-lg">
-            <p className="text-gray-400 mb-4">
-              Based on your location and typical student expenses in {userData.country}:
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-3 bg-black/30 rounded-lg">
-                <p className="text-sm text-gray-400">Your Monthly Expenses</p>
-                <p className="text-xl font-bold text-white">${userData.monthlyExpenses}</p>
+              <div className="mb-2">
+                <div className="h-2 bg-black/50 rounded-full">
+                  <div 
+                    className="h-full bg-cyan-500 rounded-full"
+                    style={{ width: `${(category.potential / category.amount) * 100}%` }}
+                  />
+                </div>
               </div>
-              <div className="p-3 bg-black/30 rounded-lg">
-                <p className="text-sm text-gray-400">Average Student Expenses</p>
-                <p className="text-xl font-bold text-cyan-500">${(userData.monthlyExpenses * 0.9).toFixed(0)}</p>
-              </div>
-              <div className="p-3 bg-black/30 rounded-lg">
-                <p className="text-sm text-gray-400">Optimization Target</p>
-                <p className="text-xl font-bold text-green-500">${(userData.monthlyExpenses * 0.8).toFixed(0)}</p>
+              <div className="text-sm text-gray-400">
+                <p className="text-green-500 font-bold mb-2">
+                  Potential Savings: ${(category.amount - category.potential).toFixed(0)}/month
+                </p>
+                <ul className="list-disc list-inside space-y-1">
+                  {category.tips.map((tip, tipIndex) => (
+                    <li key={tipIndex}>{tip}</li>
+                  ))}
+                </ul>
               </div>
             </div>
+          ))}
+        </div>
+      </HolographicCard>
+
+      {/* Third Row: Location Analysis */}
+      <HolographicCard>
+        <h3 className="text-xl font-bold mb-4 flex items-center">
+          <DollarSign className="w-6 h-6 text-cyan-500 mr-2" />
+          Cost of Living Analysis - {userData.country}
+        </h3>
+        <div className="p-4 bg-black/30 rounded-lg">
+          <p className="text-gray-400 mb-4">
+            Based on your location and typical student expenses in {userData.country}:
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-3 bg-black/30 rounded-lg">
+              <p className="text-sm text-gray-400">Your Monthly Expenses</p>
+              <p className="text-xl font-bold text-white">${userData.monthlyExpenses}</p>
+            </div>
+            <div className="p-3 bg-black/30 rounded-lg">
+              <p className="text-sm text-gray-400">Average Student Expenses</p>
+              <p className="text-xl font-bold text-cyan-500">${(userData.monthlyExpenses * 0.9).toFixed(0)}</p>
+            </div>
+            <div className="p-3 bg-black/30 rounded-lg">
+              <p className="text-sm text-gray-400">Optimization Target</p>
+              <p className="text-xl font-bold text-green-500">${(userData.monthlyExpenses * 0.8).toFixed(0)}</p>
+            </div>
           </div>
-        </HolographicCard>
-      </div>
-    </>
+        </div>
+      </HolographicCard>
+    </div>
   )
 } 
