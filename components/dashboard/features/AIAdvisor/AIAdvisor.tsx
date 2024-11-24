@@ -55,6 +55,22 @@ export function AIAdvisor({ userData }: AIAdvisorProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null)
 
+  // Add useEffect to scroll to bottom when messages change
+  useEffect(() => {
+    const scrollToBottom = () => {
+      const chatContainer = document.getElementById('chat-messages');
+      const messagesContainer = document.getElementById('messages-container');
+      if (chatContainer && messagesContainer) {
+        chatContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+    };
+
+    scrollToBottom();
+    // Add a slight delay to handle any dynamic content
+    const timeoutId = setTimeout(scrollToBottom, 100);
+    return () => clearTimeout(timeoutId);
+  }, [messages]);
+
   // Function to detect if query might need visualization
   const detectVisualizationType = (query: string): 'line' | 'bar' | 'doughnut' | null => {
     const keywords = {
@@ -201,23 +217,23 @@ export function AIAdvisor({ userData }: AIAdvisorProps) {
   }
 
   return (
-    <div className="flex w-full gap-6">
-      {/* Chat Interface - Left Half */}
-      <HolographicCard className="w-1/2 h-[calc(100vh-12rem)] flex flex-col">
-        <div className="flex items-center gap-2 mb-4">
+    <div className="flex w-full gap-6 max-h-[80vh] min-h-[600px]">
+      <HolographicCard className="w-1/2 flex flex-col h-full">
+        {/* Header */}
+        <div className="flex items-center gap-2 p-4 border-b border-gray-800 bg-black/30">
           <Bot className="w-6 h-6 text-cyan-500" />
           <h3 className="text-xl font-bold">AI Financial Advisor</h3>
         </div>
 
-        {/* Chat Messages Container */}
+        {/* Messages Container */}
         <div 
-          className="flex-1 overflow-y-auto custom-scrollbar"
-          style={{ 
-            scrollBehavior: 'smooth',
-            minHeight: '0' // This is crucial for flex overflow to work
-          }}
+          id="chat-messages"
+          className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent"
         >
-          <div className="space-y-4 p-4">
+          <div 
+            id="messages-container"
+            className="space-y-4 p-4"
+          >
             {messages.map((message, index) => (
               <div
                 key={index}
@@ -252,13 +268,13 @@ export function AIAdvisor({ userData }: AIAdvisorProps) {
           </div>
         </div>
 
-        {/* Input Area - Fixed at bottom */}
-        <div className="mt-4 border-t border-gray-800 pt-4 bg-black/30">
+        {/* Input Area */}
+        <div className="p-4 border-t border-gray-800 bg-black/30">
           <div className="flex gap-2">
             <Input
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+              onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
               placeholder="Ask about your finances..."
               className="flex-grow bg-gray-900 border-gray-700"
             />
@@ -274,7 +290,7 @@ export function AIAdvisor({ userData }: AIAdvisorProps) {
       </HolographicCard>
 
       {/* Visualization Panel - Right Half */}
-      <HolographicCard className="w-1/2 h-[calc(100vh-12rem)] flex flex-col">
+      <HolographicCard className="w-1/2 flex flex-col overflow-hidden">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="w-6 h-6 text-cyan-500" />
           <h3 className="text-xl font-bold">Visual Insights</h3>
