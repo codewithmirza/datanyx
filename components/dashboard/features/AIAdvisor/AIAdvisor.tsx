@@ -1,16 +1,25 @@
 import { useState, useEffect } from 'react'
 import { HolographicCard } from '@/components/dashboard/HolographicUI'
 import { AlertTriangle, PiggyBank, DollarSign, Send, Bot } from 'lucide-react'
-import { getAIRecommendations } from '@/lib/ai-service'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from '@/components/ui/scroll-area'
-// Removed the import for ScrollArea due to the error
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  reaction?: '👍' | '👎' | null;
+}
+
+interface GeminiResponse {
+  candidates: Array<{
+    content: {
+      parts: Array<{
+        text: string;
+      }>;
+    };
+  }>;
 }
 
 interface AIResponse {
@@ -31,6 +40,10 @@ interface AIAdvisorProps {
     university: string;
   }
 }
+
+// Gemini API configuration
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
+const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
 
 export function AIAdvisor({ userData }: AIAdvisorProps) {
   const [messages, setMessages] = useState<Message[]>([
@@ -65,79 +78,95 @@ What would you like to learn more about?`,
   const [inputMessage, setInputMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
-  const getAIResponseForTopic = async (userMessage: string) => {
-    const topics = {
-      loans: ['loan', 'repayment', 'grant', 'scholarship', 'aid', 'debt'],
-      budget: ['budget', 'expense', 'cost', 'living', 'spend', 'save'],
-      investment: ['invest', 'stock', 'crypto', 'airdrop', 'portfolio'],
-      income: ['earn', 'income', 'job', 'work', 'freelance', 'side hustle']
-    }
+  const sendMessageToGemini = async (prompt: string) => {
+    try {
+      const response = await fetch(`${API_URL}?key=${API_KEY}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `As an AI financial advisor, analyze this situation:
+                - Country: ${userData.country}
+                - University: ${userData.university}
+                - Monthly Income: $${userData.monthlyIncome}
+                - Monthly Expenses: $${userData.monthlyExpenses}
+                - Loan Amount: $${userData.loanAmount}
+                
+                User Question: ${prompt}
+                
+                Provide specific, actionable advice focusing on:
+                1. Loan Management & Financial Aid
+                2. Budget Optimization
+                3. Investment Opportunities
+                4. Extra Income Sources`
+            }]
+          }]
+        })
+      });
 
-    const messageWords = userMessage.toLowerCase().split(' ')
-    const detectedTopics = Object.entries(topics).filter(([_, keywords]) =>
-      keywords.some(keyword => messageWords.includes(keyword))
-    ).map(([topic]) => topic)
-
-    return {
-      ...userData,
-      userMessage,
-      detectedTopics: detectedTopics.length ? detectedTopics : ['general'],
-      context: {
-        country: userData.country,
-        monthlyBudget: userData.monthlyIncome - userData.monthlyExpenses,
-        savingsPotential: (userData.monthlyIncome - userData.monthlyExpenses) * 0.2
+      if (!response.ok) {
+        throw new Error('Failed to get AI response');
       }
+
+      const data = await response.json() as GeminiResponse;
+      
+      if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+        return data.candidates[0].content.parts[0].text;
+      } else {
+        throw new Error('No valid response found in the API result');
+      }
+    } catch (error) {
+      console.error('Error calling Gemini API:', error);
+      throw error;
     }
   }
 
   const sendMessage = async () => {
-    if (!inputMessage.trim()) return
+    if (!inputMessage.trim()) return;
 
     const userMessage: Message = {
       role: 'user',
       content: inputMessage,
-      timestamp: new Date()
-    }
-    setMessages(prev => [...prev, userMessage])
-    setInputMessage('')
-    setIsLoading(true)
+      timestamp: new Date(),
+      reaction: null
+    };
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage('');
+    setIsLoading(true);
 
     try {
-      const enrichedUserData = await getAIResponseForTopic(inputMessage)
-      const response = await getAIRecommendations(enrichedUserData)
-
-      const isValidResponse = (resp: any): resp is AIResponse => {
-        return resp 
-          && typeof resp === 'object' 
-          && 'data' in resp 
-          && typeof resp.data === 'object'
-          && 'recommendations' in resp.data 
-          && typeof resp.data.recommendations === 'object'
-          && 'advice' in resp.data.recommendations;
-      }
-
-      if (isValidResponse(response)) {
-        const aiMessage: Message = {
-          role: 'assistant',
-          content: response.data.recommendations.advice,
-          timestamp: new Date()
-        }
-        setMessages(prev => [...prev, aiMessage])
-      } else {
-        throw new Error('Invalid response format')
-      }
+      const aiResponse = await sendMessageToGemini(inputMessage);
+      
+      const aiMessage: Message = {
+        role: 'assistant',
+        content: aiResponse,
+        timestamp: new Date(),
+        reaction: null
+      };
+      setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
-      console.error('Error getting AI response:', error)
       const errorMessage: Message = {
         role: 'assistant',
-        content: 'I apologize, but I encountered an error. Please try again.',
-        timestamp: new Date()
-      }
-      setMessages(prev => [...prev, errorMessage])
+        content: `I apologize, but I encountered an error: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`,
+        timestamp: new Date(),
+        reaction: null
+      };
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
+
+  const handleReaction = (index: number, reaction: '👍' | '👎') => {
+    setMessages(messages.map((msg, i) => 
+      i === index ? { ...msg, reaction } : msg
+    ));
+  };
 
   return (
     <div className="grid grid-cols-1 gap-6">
@@ -148,31 +177,51 @@ What would you like to learn more about?`,
         </div>
 
         {/* Chat Messages */}
-        <ScrollArea className="flex-grow mb-4 pr-4">
-          <div className="space-y-4">
+        <ScrollArea className="flex-grow mb-4 h-[400px]">
+          <div className="space-y-4 p-4">
             {messages.map((message, index) => (
               <div
                 key={index}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${
+                  message.role === 'assistant' ? 'justify-start' : 'justify-end'
+                }`}
               >
                 <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
-                    message.role === 'user'
-                      ? 'bg-cyan-500 text-black ml-auto'
-                      : 'bg-gray-800 text-white'
+                  className={`max-w-[80%] rounded-lg p-4 ${
+                    message.role === 'assistant'
+                      ? 'bg-gray-800 text-white'
+                      : 'bg-cyan-500 text-white'
                   }`}
                 >
-                  <p>{message.content}</p>
-                  <p className="text-xs opacity-70 mt-1">
-                    {message.timestamp.toLocaleTimeString()}
-                  </p>
+                  <pre className="whitespace-pre-wrap font-sans">{message.content}</pre>
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="text-xs text-gray-400">
+                      {message.timestamp.toLocaleTimeString()}
+                    </div>
+                    {message.role === 'assistant' && (
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => handleReaction(index, '👍')}
+                          className={`p-1 rounded ${message.reaction === '👍' ? 'bg-cyan-500' : ''}`}
+                        >
+                          👍
+                        </button>
+                        <button 
+                          onClick={() => handleReaction(index, '👎')}
+                          className={`p-1 rounded ${message.reaction === '👎' ? 'bg-cyan-500' : ''}`}
+                        >
+                          👎
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-gray-800 text-white rounded-lg p-3">
-                  <div className="flex items-center gap-2">
+                <div className="bg-gray-800 text-white rounded-lg p-4">
+                  <div className="flex gap-2">
                     <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" />
                     <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce [animation-delay:-.3s]" />
                     <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce [animation-delay:-.5s]" />

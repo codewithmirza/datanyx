@@ -13,6 +13,19 @@ interface AIRequestData {
   };
 }
 
+interface AIErrorResponse {
+  error: string;
+}
+
+interface AISuccessResponse {
+  data: {
+    recommendations: {
+      advice: string;
+      relevantData: any[];
+    };
+  };
+}
+
 interface ScholarshipInfo {
   name: string;
   amount: number;
@@ -27,24 +40,48 @@ interface InvestmentOption {
   description: string;
 }
 
-const API_BASE = 'https://smartfinance-ai.manwaarullahb.workers.dev'
+const API_BASE = process.env.NODE_ENV === 'development' 
+  ? '/api'  // This will use Next.js rewrite
+  : 'https://smartfinance-ai.manwaarullahb.workers.dev/api';
+
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
 
 export async function getAIRecommendations(data: AIRequestData) {
   try {
-    const response = await fetch(`${API_BASE}/api/recommendations`, {
+    console.log('Sending data to AI service:', data);
+
+    const response = await fetch(`${API_BASE}/recommendations`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-API-Key': API_KEY || ''
+      },
       body: JSON.stringify({
         prompt: data.userMessage,
-        userData: data
+        userData: {
+          country: data.country,
+          university: data.university,
+          monthlyIncome: data.monthlyIncome,
+          monthlyExpenses: data.monthlyExpenses,
+          loanAmount: data.loanAmount,
+          userMessage: data.userMessage
+        }
       })
-    })
+    });
 
-    if (!response.ok) throw new Error('AI service error')
-    return await response.json()
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('AI service error response:', errorText);
+      throw new Error(errorText || 'AI service error');
+    }
+    
+    const result = await response.json();
+    console.log('AI service response:', result);
+    
+    return result;
   } catch (error) {
-    console.error('Error calling AI service:', error)
-    throw error
+    console.error('Error calling AI service:', error);
+    throw error;
   }
 }
 
@@ -62,7 +99,8 @@ export async function getCryptoOpportunities() {
 
 async function fetchFromAI(endpoint: string, data: any) {
   try {
-    const response = await fetch(`${API_BASE}${endpoint}`, {
+    const cleanEndpoint = endpoint.startsWith('/api') ? endpoint.slice(4) : endpoint;
+    const response = await fetch(`${API_BASE}${cleanEndpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)

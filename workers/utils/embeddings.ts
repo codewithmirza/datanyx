@@ -4,14 +4,20 @@ export async function getEmbedding(ai: Ai, text: string): Promise<number[]> {
   try {
     const result = await ai.run('@cf/baai/bge-base-en-v1.5', {
       text: [text]
-    })
-    if (!result || !result.data || !result.data[0]) {
-      throw new Error('Invalid embedding response')
+    });
+
+    if (!result?.data?.[0]) {
+      console.error('Invalid embedding response:', result);
+      throw new Error('Invalid embedding response');
     }
-    return result.data[0]
+
+    // Log the embedding dimensions for debugging
+    console.log('Embedding dimensions:', result.data[0].length);
+    
+    return result.data[0];
   } catch (error) {
-    console.error('Error generating embedding:', error)
-    throw error
+    console.error('Error generating embedding:', error);
+    throw error;
   }
 }
 

@@ -10,7 +10,7 @@
     "lint": "next lint",
     "build:worker": "webpack --config webpack.config.js",
     "deploy:worker": "wrangler deploy",
-    "dev:worker": "wrangler dev"
+    "dev:worker": "wrangler dev --experimental-vectorize-bind-to-prod"
   },
   "dependencies": {
     "@cloudflare/ai": "^1.2.2",

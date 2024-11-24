@@ -55,6 +55,22 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, trend, cl
   </div>
 )
 
+// Add interface for API response
+interface APIResponse {
+  data: {
+    metrics: {
+      riskScore: number;
+      monthlySavings: number;
+      debtToIncomeRatio: number;
+      savingsPotential: number;
+    };
+    recommendations: {
+      advice: string;
+      relevantData: any[];
+    };
+  };
+}
+
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [loading, setLoading] = useState(true)
@@ -94,33 +110,64 @@ export default function Dashboard() {
   }, [])
 
   useEffect(() => {
-    const fetchAIData = async () => {
+    const fetchMetrics = async () => {
       try {
-        const data = await getAIRecommendations({
-          loanAmount: userData.loanAmount,
-          monthlyIncome: userData.monthlyIncome,
-          monthlyExpenses: userData.monthlyExpenses,
-          country: userData.country,
-          university: userData.university
-        })
-        setAiData(data)
-        // Update metrics with AI data
+        const response = await fetch('/api/recommendations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': process.env.NEXT_PUBLIC_API_KEY || ''
+          },
+          body: JSON.stringify({
+            prompt: "Initial analysis",
+            userData: {
+              country: userData.country,
+              university: userData.university,
+              monthlyIncome: userData.monthlyIncome,
+              monthlyExpenses: userData.monthlyExpenses,
+              loanAmount: userData.loanAmount,
+              userMessage: "Initial analysis"
+            }
+          })
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch metrics');
+        
+        const data = await response.json() as APIResponse;
+        
+        // Add type guard to check if data has the expected structure
+        if (data?.data?.metrics) {
+          setMetrics(prev => ({
+            ...prev,
+            riskScore: data.data.metrics.riskScore,
+            monthlySavings: data.data.metrics.monthlySavings,
+            debtToIncomeRatio: data.data.metrics.debtToIncomeRatio,
+            savingsPotential: data.data.metrics.savingsPotential
+          }));
+
+          if (data.data.recommendations?.advice) {
+            setRecommendations([data.data.recommendations.advice]);
+          }
+        } else {
+          throw new Error('Invalid response format');
+        }
+      } catch (error) {
+        console.error('Error fetching metrics:', error);
+        // Optionally set some default values or show an error state
         setMetrics(prev => ({
           ...prev,
-          riskScore: data.data.riskScore,
-          // Add other metrics
-        }))
-        // Update recommendations
-        setRecommendations(data.data.recommendations)
-      } catch (error) {
-        console.error('Error fetching AI data:', error)
+          riskScore: 50, // Default values
+          monthlySavings: userData.monthlyIncome - userData.monthlyExpenses,
+          debtToIncomeRatio: (userData.loanAmount / 12) / userData.monthlyIncome,
+          savingsPotential: (userData.monthlyIncome - userData.monthlyExpenses) * 0.2
+        }));
       }
-    }
+    };
 
     if (!loading) {
-      fetchAIData()
+      fetchMetrics();
     }
-  }, [userData, loading])
+  }, [userData, loading]);
 
   // Add new feature tabs
   const tabs = [
