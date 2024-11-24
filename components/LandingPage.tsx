@@ -198,33 +198,37 @@ export default function LandingPage() {
                   <form onSubmit={handleSubmit} className="space-y-6 p-6">
                     <div className="space-y-2 relative">
                       <Label className="text-gray-300">Email</Label>
-                      <Input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="bg-black/30 border-cyan-500/30 text-white focus:border-cyan-500 transition-colors"
-                        placeholder="student@university.edu"
-                      />
-                      <motion.div 
-                        className="absolute inset-0 border border-cyan-500/50 rounded-md"
-                        animate={{ opacity: [0.5, 1, 0.5] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      />
+                      <div className="relative">
+                        <Input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="bg-black/30 border-cyan-500/30 text-white focus:border-cyan-500 transition-colors relative z-10"
+                          placeholder="student@university.edu"
+                        />
+                        <motion.div 
+                          className="absolute inset-0 border border-cyan-500/50 rounded-md pointer-events-none"
+                          animate={{ opacity: [0.5, 1, 0.5] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        />
+                      </div>
                     </div>
 
                     <div className="space-y-2 relative">
                       <Label className="text-gray-300">Password</Label>
-                      <Input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="bg-black/30 border-cyan-500/30 text-white focus:border-cyan-500 transition-colors"
-                      />
-                      <motion.div 
-                        className="absolute inset-0 border border-cyan-500/50 rounded-md"
-                        animate={{ opacity: [0.5, 1, 0.5] }}
-                        transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
-                      />
+                      <div className="relative">
+                        <Input
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="bg-black/30 border-cyan-500/30 text-white focus:border-cyan-500 transition-colors relative z-10"
+                        />
+                        <motion.div 
+                          className="absolute inset-0 border border-cyan-500/50 rounded-md pointer-events-none"
+                          animate={{ opacity: [0.5, 1, 0.5] }}
+                          transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+                        />
+                      </div>
                     </div>
 
                     <HolographicButton 

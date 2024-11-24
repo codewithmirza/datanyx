@@ -126,7 +126,7 @@ export default function Dashboard() {
     university: 'Quantum University',
     loanAmount: 50000,
     interestRate: 5.5,
-    repaymentTerm: 120,
+    repaymentTerm: 36,
     monthlyIncome: 3000,
     monthlyExpenses: 2000,
     country: 'USA',
@@ -139,7 +139,7 @@ export default function Dashboard() {
     savingsRate: 15,
     riskScore: 75,
     interestRate: userData.interestRate || 5.5,
-    repaymentTerm: userData.repaymentTerm || 120
+    repaymentTerm: userData.repaymentTerm || 36
   })
 
   // Add financial recommendations
@@ -330,87 +330,238 @@ export default function Dashboard() {
             >
               {/* Existing dashboard content */}
               {activeTab === 'dashboard' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                  <StatCard 
-                    title="Total Loan" 
-                    value={metrics.totalLoan}
-                    icon={CreditCard}
-                    editable={true}
-                    onUpdate={(value) => handleMetricUpdate('totalLoan', value)}
-                    prefix="$"
-                  />
-                  <StatCard 
-                    title="Monthly Payment" 
-                    value={metrics.monthlyPayment}
-                    icon={DollarSign}
-                    trend={-2.5}
-                    prefix="$"
-                  />
-                  <StatCard 
-                    title="Interest Rate" 
-                    value={metrics.interestRate}
-                    icon={Percent}
-                    editable={true}
-                    onUpdate={(value) => handleMetricUpdate('interestRate', value)}
-                    suffix="%"
-                  />
-                  <StatCard 
-                    title="Loan Term" 
-                    value={metrics.repaymentTerm}
-                    icon={Clock}
-                    editable={true}
-                    onUpdate={(value) => handleMetricUpdate('repaymentTerm', value)}
-                    suffix=" months"
-                  />
-
-                  <div className="lg:col-span-2">
-                    <HolographicCard>
-                      <h3 className="text-xl font-bold mb-4">Loan Repayment Timeline</h3>
-                      <Line
-                        data={{
-                          labels: calculateLoanTimeline().map(d => `Month ${d.month}`),
-                          datasets: [{
-                            label: 'Projected Balance',
-                            data: calculateLoanTimeline().map(d => d.balance),
-                            borderColor: '#06b6d4',
-                            backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                            fill: true,
-                          }]
-                        }}
-                        options={{
-                          responsive: true,
-                          plugins: {
-                            legend: { display: false },
-                          },
-                          scales: {
-                            y: {
-                              beginAtZero: false,
-                              grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                              ticks: { callback: (value) => `$${value}` }
-                            },
-                            x: {
-                              grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                            }
-                          },
-                        }}
-                      />
-                    </HolographicCard>
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <StatCard 
+                      title="Total Loan" 
+                      value={metrics.totalLoan}
+                      icon={CreditCard}
+                      editable={true}
+                      onUpdate={(value) => handleMetricUpdate('totalLoan', value)}
+                      prefix="$"
+                    />
+                    <StatCard 
+                      title="Monthly Payment" 
+                      value={metrics.monthlyPayment}
+                      icon={DollarSign}
+                      trend={-2.5}
+                      prefix="$"
+                    />
+                    <StatCard 
+                      title="Interest Rate" 
+                      value={metrics.interestRate}
+                      icon={Percent}
+                      editable={true}
+                      onUpdate={(value) => handleMetricUpdate('interestRate', value)}
+                      suffix="%"
+                    />
+                    <StatCard 
+                      title="Loan Term" 
+                      value={metrics.repaymentTerm}
+                      icon={Clock}
+                      editable={true}
+                      onUpdate={(value) => handleMetricUpdate('repaymentTerm', value)}
+                      suffix=" months"
+                    />
                   </div>
 
-                  <div className="lg:col-span-2">
+                  {/* New Analytics Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    {/* Loan vs Income Analysis */}
                     <HolographicCard>
-                      <h3 className="text-xl font-bold mb-4">AI Recommendations</h3>
-                      <div className="space-y-4">
-                        {recommendations.map((rec, index) => (
-                          <div key={index} className="flex items-start">
-                            <TrendingUp className="w-5 h-5 text-cyan-500 mr-2 mt-1" />
-                            <p>{rec}</p>
-                          </div>
-                        ))}
+                      <h3 className="text-xl font-bold mb-4">Loan vs Income Analysis</h3>
+                      <div className="h-64">
+                        <Bar
+                          data={{
+                            labels: ['Current', 'After 1 Year', 'After 2 Years', 'After 3 Years'],
+                            datasets: [
+                              {
+                                label: 'Loan Balance',
+                                data: calculateLoanTimeline().slice(0, 4).map(d => d.balance),
+                                backgroundColor: 'rgba(6, 182, 212, 0.5)',
+                                borderColor: 'rgba(6, 182, 212, 1)',
+                                borderWidth: 1,
+                              },
+                              {
+                                label: 'Projected Income',
+                                data: [
+                                  userData.monthlyIncome * 12,
+                                  userData.monthlyIncome * 12 * 1.05,
+                                  userData.monthlyIncome * 12 * 1.1,
+                                  userData.monthlyIncome * 12 * 1.15,
+                                ],
+                                backgroundColor: 'rgba(34, 197, 94, 0.5)',
+                                borderColor: 'rgba(34, 197, 94, 1)',
+                                borderWidth: 1,
+                              }
+                            ]
+                          }}
+                          options={{
+                            responsive: true,
+                            plugins: {
+                              legend: { 
+                                display: true,
+                                position: 'top',
+                                labels: { color: 'white' }
+                              },
+                            },
+                            scales: {
+                              y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { 
+                                  color: 'white',
+                                  callback: (value) => `$${value.toLocaleString()}`
+                                }
+                              },
+                              x: {
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { color: 'white' }
+                              }
+                            },
+                          }}
+                        />
+                      </div>
+                    </HolographicCard>
+
+                    {/* Financial Health Radar */}
+                    <HolographicCard>
+                      <h3 className="text-xl font-bold mb-4">Financial Health Metrics</h3>
+                      <div className="h-64">
+                        <Radar
+                          data={{
+                            labels: [
+                              'Debt-to-Income',
+                              'Savings Rate',
+                              'Payment Reliability',
+                              'Income Growth',
+                              'Emergency Fund'
+                            ],
+                            datasets: [{
+                              label: 'Your Metrics',
+                              data: [
+                                (metrics.totalLoan / (userData.monthlyIncome * 12)) * 100,
+                                (userData.monthlyIncome - userData.monthlyExpenses) / userData.monthlyIncome * 100,
+                                95, // Example reliability score
+                                5,  // Example growth rate
+                                ((userData.monthlyIncome - userData.monthlyExpenses) * 3) / (userData.monthlyExpenses * 6) * 100
+                              ],
+                              backgroundColor: 'rgba(6, 182, 212, 0.2)',
+                              borderColor: 'rgba(6, 182, 212, 1)',
+                              borderWidth: 2,
+                              pointBackgroundColor: 'rgba(6, 182, 212, 1)',
+                              pointBorderColor: '#fff',
+                              pointHoverBackgroundColor: '#fff',
+                              pointHoverBorderColor: 'rgba(6, 182, 212, 1)'
+                            }]
+                          }}
+                          options={{
+                            responsive: true,
+                            scales: {
+                              r: {
+                                angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                pointLabels: { color: 'white' },
+                                ticks: { color: 'white', backdropColor: 'transparent' }
+                              }
+                            },
+                            plugins: {
+                              legend: { display: false }
+                            }
+                          }}
+                        />
+                      </div>
+                    </HolographicCard>
+
+                    {/* Monthly Cash Flow */}
+                    <HolographicCard>
+                      <h3 className="text-xl font-bold mb-4">Monthly Cash Flow</h3>
+                      <div className="h-64">
+                        <Doughnut
+                          data={{
+                            labels: ['Loan Payment', 'Other Expenses', 'Savings', 'Disposable'],
+                            datasets: [{
+                              data: [
+                                metrics.monthlyPayment,
+                                userData.monthlyExpenses - metrics.monthlyPayment,
+                                (userData.monthlyIncome - userData.monthlyExpenses) * 0.5,
+                                (userData.monthlyIncome - userData.monthlyExpenses) * 0.5
+                              ],
+                              backgroundColor: [
+                                'rgba(6, 182, 212, 0.8)',
+                                'rgba(239, 68, 68, 0.8)',
+                                'rgba(34, 197, 94, 0.8)',
+                                'rgba(168, 85, 247, 0.8)'
+                              ],
+                              borderColor: 'rgba(0, 0, 0, 0.1)',
+                              borderWidth: 1
+                            }]
+                          }}
+                          options={{
+                            responsive: true,
+                            plugins: {
+                              legend: {
+                                position: 'right',
+                                labels: { color: 'white' }
+                              }
+                            }
+                          }}
+                        />
+                      </div>
+                    </HolographicCard>
+
+                    {/* Payment Schedule */}
+                    <HolographicCard>
+                      <h3 className="text-xl font-bold mb-4">Payment Schedule Impact</h3>
+                      <div className="h-64">
+                        <Line
+                          data={{
+                            labels: ['Current', '+3 Months', '+6 Months', '+9 Months', '+12 Months'],
+                            datasets: [
+                              {
+                                label: 'Standard Payment',
+                                data: calculateLoanTimeline().slice(0, 5).map(d => d.balance),
+                                borderColor: 'rgba(6, 182, 212, 1)',
+                                backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                                fill: true,
+                              },
+                              {
+                                label: 'With Extra Payment',
+                                data: calculateLoanTimeline().slice(0, 5).map(d => d.balance * 0.95),
+                                borderColor: 'rgba(34, 197, 94, 1)',
+                                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                                fill: true,
+                              }
+                            ]
+                          }}
+                          options={{
+                            responsive: true,
+                            plugins: {
+                              legend: {
+                                position: 'top',
+                                labels: { color: 'white' }
+                              }
+                            },
+                            scales: {
+                              y: {
+                                beginAtZero: false,
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { 
+                                  color: 'white',
+                                  callback: (value) => `$${value.toLocaleString()}`
+                                }
+                              },
+                              x: {
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { color: 'white' }
+                              }
+                            }
+                          }}
+                        />
                       </div>
                     </HolographicCard>
                   </div>
-                </div>
+                </>
               )}
 
               {/* AI Advisor Tab */}
