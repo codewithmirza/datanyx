@@ -68,91 +68,95 @@ SmartFinance.AI is an intelligent financial management platform designed specifi
 
 ```mermaid
 graph TB
-subgraph "Client Layer"
-UI[Next.js Frontend]
-THR[Three.js Rendering]
-VIZ[Data Visualization]
-end
-subgraph "Edge Computing Layer"
-CF[Cloudflare Workers]
-AI[Cloudflare AI]
-VDB[(Vectorize DB)]
-KV[(KV Storage)]
-end
-subgraph "Authentication Layer"
-FA[Firebase Auth]
-FS[(Firestore)]
-end
-UI --> CF
-THR --> UI
-VIZ --> UI
-CF --> AI
-CF --> VDB
-CF --> KV
-CF --> FA
+    subgraph "Client Layer"
+        UI[Next.js Frontend]
+        THR[Three.js Rendering]
+        VIZ[Data Visualization]
+    end
+    subgraph "Edge Computing Layer"
+        CF[Cloudflare Workers]
+        AI[Cloudflare AI]
+        VDB[(Vectorize DB)]
+        KV[(KV Storage)]
+    end
+    subgraph "Authentication Layer"
+        FA[Firebase Auth]
+        FS[(Firestore)]
+    end
+    UI --> CF
+    THR --> UI
+    VIZ --> UI
+    CF --> AI
+    CF --> VDB
+    CF --> KV
+    CF --> FA
+```
 
 ### **RAG Implementation Flow**
 
 ```mermaid
 sequenceDiagram
-participant U as User
-participant W as Worker
-participant V as Vectorize
-participant KV as KV Store
-participant LLM as LLaMA-2
-U->>W: Financial Query
-W->>V: Search Similar Cases
-V-->>W: Return Matches
-W->>KV: Fetch Context Data
-W->>LLM: Generate Response
-LLM-->>W: Financial Advice
-W-->>U: Formatted Response
+    participant U as User
+    participant W as Worker
+    participant V as Vectorize
+    participant KV as KV Store
+    participant LLM as LLaMA-2
+    U->>W: Financial Query
+    W->>V: Search Similar Cases
+    V-->>W: Return Matches
+    W->>KV: Fetch Context Data
+    W->>LLM: Generate Response
+    LLM-->>W: Financial Advice
+    W-->>U: Formatted Response
+```
 
+### **Data Processing Pipeline**
 
-### Data Processing Pipeline
+```mermaid
 graph LR
-subgraph "Data Sources"
-FD[Financial Data]
-SD[Scholarship Data]
-ID[Investment Data]
-end
-subgraph "Processing"
-EMB[Embeddings]
-VEC[Vector Storage]
-CTX[Context Builder]
-end
-subgraph "Retrieval"
-QP[Query Processing]
-VS[Vector Search]
-RA[Response Assembly]
-end
-FD & SD & ID --> EMB
-EMB --> VEC
-VEC --> VS
-VS --> CTX
-CTX --> RA
+    subgraph "Data Sources"
+        FD[Financial Data]
+        SD[Scholarship Data]
+        ID[Investment Data]
+    end
+    subgraph "Processing"
+        EMB[Embeddings]
+        VEC[Vector Storage]
+        CTX[Context Builder]
+    end
+    subgraph "Retrieval"
+        QP[Query Processing]
+        VS[Vector Search]
+        RA[Response Assembly]
+    end
+    FD & SD & ID --> EMB
+    EMB --> VEC
+    VEC --> VS
+    VS --> CTX
+    CTX --> RA
+```
 
+### **Component Architecture**
 
-### Component Architecture
+```mermaid
 graph TB
-subgraph "Frontend Components"
-DC[Dashboard]
-AA[AI Advisor]
-CC[Cost Cutter]
-TL[Timeline]
-end
-subgraph "Edge Services"
-AIS[AI Service]
-VS[Vector Search]
-KVS[KV Storage]
-end
-DC --> AIS
-AA --> AIS
-CC --> AIS
-TL --> AIS
-AIS --> VS
-AIS --> KVS
-
+    subgraph "Frontend Components"
+        DC[Dashboard]
+        AA[AI Advisor]
+        CC[Cost Cutter]
+        TL[Timeline]
+    end
+    subgraph "Edge Services"
+        AIS[AI Service]
+        VS[Vector Search]
+        KVS[KV Storage]
+    end
+    DC --> AIS
+    AA --> AIS
+    CC --> AIS
+    TL --> AIS
+    AIS --> VS
+    AIS --> KVS
 ```
 
 ---
