@@ -7,27 +7,42 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { motion } from 'framer-motion'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { signIn, signUp } = useAuth()
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError('')
+    setIsLoading(true)
+    
     try {
-      // For development, just check if fields are not empty
-      if (email && password) {
-        // Log the navigation attempt
-        console.log('Attempting to navigate to dashboard...')
-        // Force a hard navigation to the dashboard
-        window.location.href = '/dashboard'
-        // Alternative approach using router
-        // await router.push('/dashboard')
+      // Validate input
+      if (!email || !password) {
+        setError('Email and password are required')
+        return
       }
+      
+      if (isLogin) {
+        await signIn(email, password)
+      } else {
+        await signUp(email, password)
+      }
+      
+      // Successful login/signup - navigate to dashboard
+      router.push('/dashboard')
     } catch (error) {
-      console.error('Navigation error:', error)
+      console.error('Authentication error:', error)
+      setError('Authentication failed. Please try again.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -52,6 +67,7 @@ export default function LoginPage() {
                 : 'Start your journey to better loan management'}
             </CardDescription>
           </CardHeader>
+          
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
@@ -77,17 +93,19 @@ export default function LoginPage() {
                   required
                 />
               </div>
+              
+              {error && (
+                <div className="text-red-500 text-sm">{error}</div>
+              )}
+              
               <Button 
                 type="submit" 
                 className="w-full bg-cyan-500 hover:bg-cyan-600"
-                onClick={(e) => {
-                  e.preventDefault()
-                  if (email && password) {
-                    window.location.href = '/dashboard'
-                  }
-                }}
+                disabled={isLoading}
               >
-                {isLogin ? 'Sign In' : 'Create Account'}
+                {isLoading 
+                  ? 'Processing...' 
+                  : isLogin ? 'Sign In' : 'Create Account'}
               </Button>
 
               <div className="text-center">

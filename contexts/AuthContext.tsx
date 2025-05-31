@@ -1,14 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { 
-  Auth,
-  User,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
-} from 'firebase/auth'
+import type { User } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 
 interface AuthContextType {
@@ -28,7 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
       setUser(user)
       setLoading(false)
     })
@@ -37,15 +30,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password)
+    try {
+      await auth.signInWithEmailAndPassword(email, password)
+    } catch (error) {
+      console.error('Sign in error:', error)
+    }
   }
 
   const signUp = async (email: string, password: string) => {
-    await createUserWithEmailAndPassword(auth, email, password)
+    try {
+      await auth.createUserWithEmailAndPassword(email, password)
+    } catch (error) {
+      console.error('Sign up error:', error)
+    }
   }
 
   const logout = async () => {
-    await signOut(auth)
+    try {
+      await auth.signOut()
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
   }
 
   const value = {

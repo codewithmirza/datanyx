@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { HolographicButton, HolographicCard } from './dashboard/HolographicUI'
 import { Brain, Sparkles, TrendingUp, DollarSign, Shield, Rocket, X } from 'lucide-react'
 import Scene3D from './3d/Scene3D'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function LandingPage() {
   const [isLogin, setIsLogin] = useState(true)
@@ -16,7 +17,10 @@ export default function LandingPage() {
   const [password, setPassword] = useState('')
   const [isScrolled, setIsScrolled] = useState(false)
   const [showLoginCard, setShowLoginCard] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
   const router = useRouter()
+  const { signIn, signUp } = useAuth()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,9 +30,33 @@ export default function LandingPage() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const handleSubmit = (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
-    router.push('/dashboard')
+    
+    setError('')
+    setIsLoading(true)
+    
+    try {
+      // Validate input
+      if (!email || !password) {
+        setError('Email and password are required')
+        setIsLoading(false)
+        return
+      }
+      
+      if (isLogin) {
+        await signIn(email, password)
+      } else {
+        await signUp(email, password)
+      }
+      
+      // Navigate to dashboard
+      router.push('/dashboard')
+    } catch (error) {
+      console.error('Authentication error:', error)
+      setError('Authentication failed. Please try again.')
+      setIsLoading(false)
+    }
   }
 
   const features = [
@@ -231,11 +259,16 @@ export default function LandingPage() {
                       </div>
                     </div>
 
+                    {error && (
+                      <div className="text-red-500 text-sm font-medium">{error}</div>
+                    )}
+
                     <HolographicButton 
-                      onClick={() => handleSubmit()}
+                      type="submit"
                       className="w-full bg-cyan-500 text-black hover:bg-cyan-400 transition-colors"
+                      disabled={isLoading}
                     >
-                      {isLogin ? 'Login' : 'Create Account'}
+                      {isLoading ? 'Processing...' : (isLogin ? 'Login' : 'Create Account')}
                     </HolographicButton>
 
                     <p className="text-center text-gray-400">
